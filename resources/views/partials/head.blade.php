@@ -1,0 +1,51 @@
+<!-- BASIC META -->
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<!-- SEO META -->
+<meta name="description" content="Melangkah Penghijauan — Program CSR PermataBank untuk memantau langkahmu dan menanam pohon demi lingkungan yang lebih hijau." />
+<meta name="author" content="PermataBank CSR" />
+<meta name="keywords" content="permata bank, csr, penghijauan, langkah hijau, emisi karbon, lingkungan, sustainability, pohon, melangkah penghijauan" />
+<meta name="robots" content="index, follow" />
+<meta name="language" content="id" />
+<meta name="theme-color" content="#0061FE" />
+
+<title>{{ $title ?? 'Melangkah Penghijauan | PermataBank CSR' }}</title>
+
+<!-- FAVICONS -->
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
+<link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
+<link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
+<link rel="manifest" href="{{ asset('site.webmanifest') }}">
+<link rel="mask-icon" href="{{ asset('safari-pinned-tab.svg') }}" color="#0061FE">
+<meta name="msapplication-TileColor" content="#0061FE" />
+<meta name="msapplication-TileImage" content="{{ asset('mstile-144x144.png') }}" />
+
+<!-- OPEN GRAPH / FACEBOOK -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content="{{ url()->current() }}" />
+<meta property="og:title" content="Melangkah Penghijauan | PermataBank CSR" />
+<meta property="og:description" content="Langkah kecilmu hari ini, hijaukan bumi esok hari. Ikuti gerakan Melangkah Penghijauan dari PermataBank." />
+<meta property="og:image" content="{{ url('og-image.jpg') }}" />
+<meta property="og:image:width" content="300" />
+<meta property="og:image:height" content="300" />
+<meta property="og:site_name" content="Melangkah Penghijauan" />
+
+<!-- TWITTER CARD -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Melangkah Penghijauan | PermataBank CSR" />
+<meta name="twitter:description" content="Langkah kecilmu hari ini bisa menghijaukan bumi. Bergabunglah dalam gerakan PermataBank untuk masa depan yang berkelanjutan." />
+<meta name="twitter:image" content="{{ url('og-image.jpg') }}" />
+
+<!-- FONTS -->
+<link rel="preconnect" href="https://fonts.bunny.net">
+<link href="https://fonts.bunny.net/css?family=inter:400,500,600" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+    integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+@vite(['resources/css/app.css', 'resources/js/app.js'])
+@fluxAppearance
