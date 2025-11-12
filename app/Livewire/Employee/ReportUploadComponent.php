@@ -4,9 +4,10 @@ namespace App\Livewire\Employee;
 
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\{Storage, Auth, Http, Log};
 use Illuminate\Validation\Rule;
+use App\Models\DailyReport;
+use App\Enums\StatusVerifikasi;
 
 class ReportUploadComponent extends Component
 {
@@ -43,8 +44,7 @@ class ReportUploadComponent extends Component
             $filename = "{$date}.{$this->photo->extension()}";
             $path = "reports/{$email}/{$filename}";
 
-            // Update progress to indicate processing
-            $this->uploadProgress = 50;
+            $this->uploadProgress = 30;
 
             // Upload to S3
             $result = Storage::disk('s3')->put($path, file_get_contents($this->photo->getRealPath()), 'public');
@@ -53,22 +53,83 @@ class ReportUploadComponent extends Component
                 throw new \Exception('Gagal mengupload file ke S3');
             }
 
-            $this->uploadProgress = 100;
+            $this->uploadProgress = 60;
 
-            $this->uploadedUrl = rtrim(config('filesystems.disks.s3.url'), '/') . '/' . $path;
+            $s3Url = rtrim(config('filesystems.disks.s3.url'), '/') . '/' . $path;
+
+            // Create or update DailyReport
+            $report = DailyReport::where('user_id', $user->id)
+                ->whereDate('tanggal_laporan', today())
+                ->first();
+
+            if ($report) {
+                $report->update([
+                    'bukti_screenshot' => $s3Url,
+                    'status_verifikasi' => StatusVerifikasi::PENDING,
+                    'langkah' => 0,
+                    'co2e_reduction_kg' => 0,
+                    'poin' => 0,
+                    'pohon' => 0,
+                ]);
+                $report->increment('count_document');
+            } else {
+                $report = DailyReport::create([
+                    'user_id' => $user->id,
+                    'tanggal_laporan' => today(),
+                    'bukti_screenshot' => $s3Url,
+                    'status_verifikasi' => StatusVerifikasi::PENDING,
+                    'langkah' => 0,
+                    'co2e_reduction_kg' => 0,
+                    'poin' => 0,
+                    'pohon' => 0,
+                    'count_document' => 1,
+                ]);
+            }
+
+            $this->uploadProgress = 80;
+
+            // Send to FastAPI OCR
+            $ocrApiUrl = rtrim(config('app.ocr_api_url', 'http://localhost:8000'), '/');
+            $ocrEndpoint = $ocrApiUrl . '/api/v1/ocr-ecosteps';
+
+            try {
+                Log::info('Sending OCR request to FastAPI', [
+                    'endpoint' => $ocrEndpoint,
+                    'report_id' => $report->id,
+                    'user_id' => $user->id,
+                    's3_url' => $s3Url,
+                ]);
+
+                $response = Http::timeout(10)->post($ocrEndpoint, [
+                    'report_id' => $report->id,
+                    'user_id' => $user->id,
+                    's3_url' => $s3Url,
+                ]);
+
+                if ($response->successful()) {
+                    Log::info('OCR request sent successfully', ['status' => $response->status()]);
+                } else {
+                    Log::warning('OCR request failed', [
+                        'status' => $response->status(),
+                        'body' => $response->body(),
+                    ]);
+                }
+            } catch (\Exception $e) {
+                Log::error('Failed to send OCR request', [
+                    'error' => $e->getMessage(),
+                    'report_id' => $report->id,
+                ]);
+            }
+
+            $this->uploadProgress = 100;
             $this->showSuccess = true;
 
-            // Reset photo after successful upload
-            $this->photo = null;
+            sleep(1);
 
-            // Dispatch event to open URL in new tab
-            $this->dispatch('open-url', url: $this->uploadedUrl);
-
-            // Dispatch event to close modal
             $this->dispatch('close-modal', name: 'upload-harian');
+            $this->dispatch('refresh-dashboard');
 
-            // Reset state after a delay
-            $this->reset(['isUploading', 'uploadProgress', 'uploadedUrl', 'showSuccess']);
+            $this->reset(['photo', 'isUploading', 'uploadProgress', 'uploadedUrl', 'showSuccess']);
         } catch (\Exception $e) {
             $this->addError('photo', $e->getMessage());
             $this->isUploading = false;

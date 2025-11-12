@@ -65,7 +65,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => 'Asia/Jakarta',
 
     /*
     |--------------------------------------------------------------------------
@@ -104,6 +104,9 @@ return [
             explode(',', (string) env('APP_PREVIOUS_KEYS', ''))
         ),
     ],
+
+    'xapi_key' => env('XAPI_KEY', 'sk_dev_a1b2c3d4e5f6g7h8i9j0'),
+    'ocr_api_url' => env('OCRAPI_URL', 'http://localhost:8000'),
 
     /*
     |--------------------------------------------------------------------------

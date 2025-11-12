@@ -7,15 +7,16 @@
 
 
         <div x-data="{
-            isDragging: false,
-            handleDrop(e) {
-                this.isDragging = false;
-                const files = e.dataTransfer.files;
-                if (files.length > 0) {
-                    @this.upload('photo', files[0]);
+                isDragging: false,
+                handleDrop(e) {
+                    this.isDragging = false;
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        @this.upload('photo', files[0]);
+                    }
                 }
-            }
-        }" @dragover.prevent="isDragging = true" @dragleave.prevent="isDragging = false"
+            }"
+            @dragover.prevent="isDragging = true" @dragleave.prevent="isDragging = false"
             @drop.prevent="handleDrop($event)" :class="isDragging ? 'border-blue-500 bg-blue-100' : 'bg-blue-50'"
             class="rounded-lg p-6 flex-col items-center min-h-64 border-2 border-dashed border-blue-200 transition-colors">
             @if ($isUploading)
@@ -53,18 +54,33 @@
                         </button>
                     </div>
                 @else
-                    <label class="w-full flex flex-col items-center cursor-pointer">
+                    <div
+                        class="w-full flex flex-col items-center cursor-pointer"
+                        x-data="{ fileInput: null }"
+                        x-init="fileInput = $refs.input"
+                    >
                         <i class="ph ph-cloud-arrow-up px-2 py-1 text-2xl bg-white rounded mb-3"></i>
                         <span class="font-medium text-gray-700 mb-2">Pilih file atau drag & drop</span>
-                        <input type="file" wire:model="photo" accept="image/jpeg,image/png,image/jpg"
-                            class="hidden" />
+                        <input
+                            x-ref="input"
+                            type="file"
+                            wire:model="photo"
+                            accept="image/jpeg,image/png,image/jpg"
+                            class="hidden"
+                        />
                         <span class="text-xs text-gray-500 mb-4">JPEG atau PNG format, maksimal 5 MB</span>
                         <span class="inline-block">
-                            <flux:button type="button" variant="outline" color="blue">
+                            <flux:button
+                                type="button"
+                                variant="outline"
+                                color="blue"
+                                @click.prevent="fileInput.click()"
+                                class="cursor-pointer"
+                            >
                                 Cari File
                             </flux:button>
                         </span>
-                    </label>
+                    </div>
                 @endif
 
                 <div wire:loading wire:target="photo" class="mt-3">

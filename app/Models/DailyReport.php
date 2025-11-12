@@ -17,8 +17,9 @@ class DailyReport extends Model
         'poin',
         'pohon',
         'status_verifikasi',
-        'bukti_screenshot',
-        'ocr_result_raw',
+        'ocr_result',
+        'bukti_screenshot', // url s3
+        'count_document',
         'verified_at',
     ];
 

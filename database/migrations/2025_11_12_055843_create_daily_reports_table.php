@@ -21,7 +21,8 @@ return new class extends Migration
             $table->decimal('pohon', 5, 2)->default(0);
             $table->tinyInteger('status_verifikasi')->default(1); // 1=pending, 2=diverifikasi, 3=ditolak
             $table->text('bukti_screenshot')->nullable(); // URL ke S3
-            $table->longText('ocr_result_raw')->nullable();
+            $table->longText('ocr_result')->nullable();
+            $table->integer('count_document')->default(0);
             $table->timestamp('verified_at')->nullable();
             $table->timestamps();
 
