@@ -49,7 +49,12 @@ new #[Layout('components.layouts.auth')]
 
         session()->regenerate();
 
-        return redirect()->intended(route('dashboard'));
+        $user = Auth::user();
+        $redirectRoute = $user->user_level == 2
+            ? route('admin.dashboard')
+            : route('dashboard');
+
+        return redirect()->intended($redirectRoute);
     }
 };
 

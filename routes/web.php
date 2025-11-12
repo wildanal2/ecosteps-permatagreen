@@ -11,11 +11,21 @@ Route::get('/', function () {
     return redirect()->route('login');
 })->name('home');
 
-Route::view('dashboard', 'dashboard')
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
+// Employee Routes (user_level = 1)
+Route::middleware(['auth', 'verified', 'check.user.level'])->group(function () {
+    Volt::route('dashboard', 'employee.dashboard')->name('dashboard');
+    Volt::route('riwayat', 'employee.riwayat')->name('riwayat');
+});
 
-Route::middleware(['auth'])->group(function () {
+// Admin Routes (user_level = 2)
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'check.user.level'])->group(function () {
+    Volt::route('dashboard', 'admin.dashboard')->name('dashboard');
+    Volt::route('data-peserta', 'admin.data-peserta')->name('data-peserta');
+    Volt::route('verifikasi-bukti', 'admin.verifikasi-bukti')->name('verifikasi-bukti');
+    Volt::route('leaderboard', 'admin.leaderboard')->name('leaderboard');
+});
+
+Route::middleware(['auth', 'check.user.level'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 
     Volt::route('settings/profile', 'settings.profile')->name('profile.edit');

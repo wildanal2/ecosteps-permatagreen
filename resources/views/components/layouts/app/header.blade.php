@@ -3,45 +3,31 @@
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-screen bg-white dark:bg-zinc-800">
-        <flux:header container class="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+    <body class="min-h-screen bg-[#f7f7f7] dark:bg-zinc-800">
+        <flux:header container class=" bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
             <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
 
             <a href="{{ route('dashboard') }}" class="ms-2 me-5 flex items-center space-x-2 rtl:space-x-reverse lg:ms-0" wire:navigate>
-                <x-app-logo />
+                <img src="{{ asset('assets/images/permata-logo.png') }}" alt="Permata Bank" class="h-8">
             </a>
 
-            <flux:navbar class="-mb-px max-lg:hidden">
-                <flux:navbar.item icon="layout-grid" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                    {{ __('Dashboard') }}
-                </flux:navbar.item>
-            </flux:navbar>
+            @if(auth()->user()->user_level == 2)
+                {{-- Menu Admin --}}
+                <flux:navbar class="-mb-px max-lg:hidden">
+                    <flux:navbar.item icon="home" :href="route('admin.dashboard')" :current="request()->routeIs('admin.dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navbar.item>
+                    <flux:navbar.item icon="users" :href="route('admin.data-peserta')" :current="request()->routeIs('admin.data-peserta')" wire:navigate>{{ __('Data Peserta') }}</flux:navbar.item>
+                    <flux:navbar.item icon="check-badge" :href="route('admin.verifikasi-bukti')" :current="request()->routeIs('admin.verifikasi-bukti')" wire:navigate>{{ __('Verifikasi Bukti') }}</flux:navbar.item>
+                    <flux:navbar.item icon="trophy" :href="route('admin.leaderboard')" :current="request()->routeIs('admin.leaderboard')" wire:navigate>{{ __('Leaderboard') }}</flux:navbar.item>
+                </flux:navbar>
+            @else
+                {{-- Menu Karyawan --}}
+                <flux:navbar class="-mb-px max-lg:hidden">
+                    <flux:navbar.item icon="layout-grid" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navbar.item>
+                    <flux:navbar.item icon="clock" :href="route('riwayat')" :current="request()->routeIs('riwayat')" wire:navigate>{{ __('Riwayat') }}</flux:navbar.item>
+                </flux:navbar>
+            @endif
 
             <flux:spacer />
-
-            <flux:navbar class="me-1.5 space-x-0.5 rtl:space-x-reverse py-0!">
-                <flux:tooltip :content="__('Search')" position="bottom">
-                    <flux:navbar.item class="!h-10 [&>div>svg]:size-5" icon="magnifying-glass" href="#" :label="__('Search')" />
-                </flux:tooltip>
-                <flux:tooltip :content="__('Repository')" position="bottom">
-                    <flux:navbar.item
-                        class="h-10 max-lg:hidden [&>div>svg]:size-5"
-                        icon="folder-git-2"
-                        href="https://github.com/laravel/livewire-starter-kit"
-                        target="_blank"
-                        :label="__('Repository')"
-                    />
-                </flux:tooltip>
-                <flux:tooltip :content="__('Documentation')" position="bottom">
-                    <flux:navbar.item
-                        class="h-10 max-lg:hidden [&>div>svg]:size-5"
-                        icon="book-open-text"
-                        href="https://laravel.com/docs/starter-kits#livewire"
-                        target="_blank"
-                        label="Documentation"
-                    />
-                </flux:tooltip>
-            </flux:navbar>
 
             <!-- Desktop User Menu -->
             <flux:dropdown position="top" align="end">
@@ -92,29 +78,29 @@
         <flux:sidebar stashable sticky class="lg:hidden border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
             <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
 
-            <a href="{{ route('dashboard') }}" class="ms-1 flex items-center space-x-2 rtl:space-x-reverse" wire:navigate>
-                <x-app-logo />
+            <a href="{{ route('dashboard') }}" class="ms-2 me-5 flex items-center space-x-2 rtl:space-x-reverse lg:ms-0" wire:navigate>
+                <img src="{{ asset('assets/images/permata-logo.png') }}" alt="Permata Bank" class="h-8">
             </a>
 
             <flux:navlist variant="outline">
-                <flux:navlist.group :heading="__('Platform')">
-                    <flux:navlist.item icon="layout-grid" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                    {{ __('Dashboard') }}
-                    </flux:navlist.item>
-                </flux:navlist.group>
+                @if(auth()->user()->user_level == 2)
+                    {{-- Menu Admin --}}
+                    <flux:navlist.group :heading="__('Menu')">
+                        <flux:navlist.item icon="home" :href="route('admin.dashboard')" :current="request()->routeIs('admin.dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
+                        <flux:navlist.item icon="users" :href="route('admin.data-peserta')" :current="request()->routeIs('admin.data-peserta')" wire:navigate>{{ __('Data Peserta') }}</flux:navlist.item>
+                        <flux:navlist.item icon="check-badge" :href="route('admin.verifikasi-bukti')" :current="request()->routeIs('admin.verifikasi-bukti')" wire:navigate>{{ __('Verifikasi Bukti') }}</flux:navlist.item>
+                        <flux:navlist.item icon="trophy" :href="route('admin.leaderboard')" :current="request()->routeIs('admin.leaderboard')" wire:navigate>{{ __('Leaderboard') }}</flux:navlist.item>
+                    </flux:navlist.group>
+                @else
+                    {{-- Menu Karyawan --}}
+                    <flux:navlist.group :heading="__('Menu')">
+                        <flux:navlist.item icon="layout-grid" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
+                        <flux:navlist.item icon="clock" :href="route('riwayat')" :current="request()->routeIs('riwayat')" wire:navigate>{{ __('Riwayat') }}</flux:navlist.item>
+                    </flux:navlist.group>
+                @endif
             </flux:navlist>
 
             <flux:spacer />
-
-            <flux:navlist variant="outline">
-                <flux:navlist.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
-                {{ __('Repository') }}
-                </flux:navlist.item>
-
-                <flux:navlist.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
-                {{ __('Documentation') }}
-                </flux:navlist.item>
-            </flux:navlist>
         </flux:sidebar>
 
         {{ $slot }}

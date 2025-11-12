@@ -7,14 +7,26 @@
         <flux:sidebar sticky stashable class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
             <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
 
-            <a href="{{ route('dashboard') }}" class="me-5 flex items-center space-x-2 rtl:space-x-reverse" wire:navigate>
+            <a href="{{ auth()->user()->user_level == 2 ? route('admin.dashboard') : route('dashboard') }}" class="me-5 flex items-center space-x-2 rtl:space-x-reverse" wire:navigate>
                 <x-app-logo />
             </a>
 
             <flux:navlist variant="outline">
-                <flux:navlist.group :heading="__('Platform')" class="grid">
-                    <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
-                </flux:navlist.group>
+                @if(auth()->user()->user_level == 2)
+                    {{-- Menu Admin --}}
+                    <flux:navlist.group :heading="__('Admin')" class="grid">
+                        <flux:navlist.item icon="home" :href="route('admin.dashboard')" :current="request()->routeIs('admin.dashboard')" wire:navigate>Dashboard</flux:navlist.item>
+                        <flux:navlist.item icon="users" :href="route('admin.data-peserta')" :current="request()->routeIs('admin.data-peserta')" wire:navigate>Data Peserta</flux:navlist.item>
+                        <flux:navlist.item icon="check-badge" :href="route('admin.verifikasi-bukti')" :current="request()->routeIs('admin.verifikasi-bukti')" wire:navigate>Verifikasi Bukti</flux:navlist.item>
+                        <flux:navlist.item icon="trophy" :href="route('admin.leaderboard')" :current="request()->routeIs('admin.leaderboard')" wire:navigate>Leaderboard</flux:navlist.item>
+                    </flux:navlist.group>
+                @else
+                    {{-- Menu Karyawan --}}
+                    <flux:navlist.group :heading="__('Karyawan')" class="grid">
+                        <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>Dashboard</flux:navlist.item>
+                        <flux:navlist.item icon="clock" :href="route('riwayat')" :current="request()->routeIs('riwayat')" wire:navigate>Riwayat</flux:navlist.item>
+                    </flux:navlist.group>
+                @endif
             </flux:navlist>
 
             <flux:spacer />
