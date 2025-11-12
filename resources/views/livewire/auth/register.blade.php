@@ -80,9 +80,12 @@ new #[Layout('components.layouts.auth')]
 
         $user = User::create($validated);
 
-        Auth::login($user);
+        $user->sendEmailVerificationNotification();
 
-        return redirect()->route('dashboard');
+        session()->put('registered_email', $user->email);
+        session()->put('verification_email', $user->email);
+
+        return redirect()->route('verification.notice');
     }
 };
 
