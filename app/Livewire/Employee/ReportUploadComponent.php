@@ -72,10 +72,6 @@ class ReportUploadComponent extends Component
                 $report->update([
                     'bukti_screenshot' => $s3Url,
                     'status_verifikasi' => StatusVerifikasi::PENDING,
-                    'langkah' => 0,
-                    'co2e_reduction_kg' => 0,
-                    'poin' => 0,
-                    'pohon' => 0,
                 ]);
                 $report->increment('count_document');
             } else {
@@ -136,6 +132,7 @@ class ReportUploadComponent extends Component
 
             $this->dispatch('close-modal', name: 'upload-harian');
             $this->dispatch('refresh-dashboard');
+            $this->dispatch('chart-updated');
             // Show success notification
             flash()->success('Laporan berhasil diunggah!');
             $this->reset(['photo', 'isUploading', 'uploadProgress', 'uploadedUrl', 'showSuccess']);

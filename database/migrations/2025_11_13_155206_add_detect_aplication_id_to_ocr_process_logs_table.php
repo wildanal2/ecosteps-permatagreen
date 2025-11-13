@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::table('ocr_process_logs', function (Blueprint $table) {
             $table->tinyInteger('detect_aplication_id')->default(1)->after('fastapi_status');
+            $table->tinyInteger('status_verifikasi')->default(1)->after('detect_aplication_id');
         });
     }
 
@@ -23,6 +24,7 @@ return new class extends Migration
     {
         Schema::table('ocr_process_logs', function (Blueprint $table) {
             $table->dropColumn('detect_aplication_id');
+            $table->dropColumn('status_verifikasi');
         });
     }
 };

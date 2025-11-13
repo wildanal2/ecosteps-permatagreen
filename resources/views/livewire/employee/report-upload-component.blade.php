@@ -1,7 +1,10 @@
 <flux:modal name="upload-harian" class="max-w-md lg:w-lg">
     <div class="space-y-6">
         <div>
-            <flux:heading size="lg">Kirim Laporan Aktivitas Harian</flux:heading>
+            <div class="text-center">
+                <i class="ph-fill ph-footprints text-white bg-blue-600 mx-auto p-1 text-2xl rounded-xl"></i>
+            </div>
+            <flux:heading class="text-center mt-3" size="lg">Kirim Laporan Aktivitas Harian</flux:heading>
             <flux:text class="mt-2">Unggah bukti aktivitas jalanmu hari ini untuk verifikasi</flux:text>
         </div>
 
@@ -18,7 +21,7 @@
             }"
             @dragover.prevent="isDragging = true" @dragleave.prevent="isDragging = false"
             @drop.prevent="handleDrop($event)" :class="isDragging ? 'border-blue-500 bg-blue-100' : 'bg-blue-50'"
-            class="rounded-lg p-6 flex-col items-center min-h-64 border-2 border-dashed border-blue-200 transition-colors">
+            class="rounded-lg p-6 flex-col items-center min-h-44 border-2 border-dashed border-blue-200 transition-colors">
             @if ($isUploading)
                 <div class="w-full flex flex-col items-center justify-center">
                     <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4">
@@ -46,8 +49,12 @@
                 @if ($photo)
                     <div class="text-center">
                         <img src="{{ $photo->temporaryUrl() }}" class="max-h-48 rounded-lg mb-3 mx-auto" />
-                        <p class="text-sm text-gray-700 font-medium">{{ $photo->getClientOriginalName() }}</p>
-                        <p class="text-xs text-gray-500">{{ number_format($photo->getSize() / 1024, 2) }} KB</p>
+                        <div class="flex flex-col items-center gap-1 mb-2 break-all">
+                            <p class="text-sm text-gray-700 font-medium w-full break-words">
+                                {{ $photo->getClientOriginalName() }}
+                            </p>
+                            <p class="text-xs text-gray-500">{{ number_format($photo->getSize() / 1024, 2) }} KB</p>
+                        </div>
                         <button type="button" wire:click="removePhoto"
                             class="mt-2 text-red-600 text-sm hover:underline">
                             Hapus

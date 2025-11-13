@@ -15,6 +15,20 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified', 'check.user.level'])->group(function () {
     Volt::route('dashboard', 'employee.dashboard')->name('dashboard');
     Volt::route('riwayat', 'employee.riwayat')->name('riwayat');
+    Volt::route('user/profile', 'settings.profile-karyawan')->name('employee.profile');
+    Volt::route('user/password', 'settings.password-karyawan')->name('employee.password');
+    Volt::route('user/appearance', 'settings.appearance-karyawan')->name('employee.appearance');
+
+    Volt::route('user/two-factor', 'settings.two-factor-karyawan')
+        ->middleware(
+            when(
+                Features::canManageTwoFactorAuthentication()
+                    && Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword'),
+                ['password.confirm'],
+                [],
+            ),
+        )
+        ->name('employee.two-factor');
 });
 
 // Admin Routes (user_level = 2)

@@ -17,18 +17,18 @@ class CheckUserLevel
     {
         if (auth()->check()) {
             $userLevel = auth()->user()->user_level;
-            
+
             // Admin (level 2) hanya bisa akses route admin.*
             if ($userLevel == 2 && !$request->routeIs('admin.*') && !$request->routeIs('profile.*') && !$request->routeIs('user-password.*') && !$request->routeIs('appearance.*') && !$request->routeIs('two-factor.*')) {
                 return redirect()->route('admin.dashboard');
             }
-            
+
             // Karyawan (level 1) hanya bisa akses route dashboard & riwayat
-            if ($userLevel == 1 && !$request->routeIs('dashboard') && !$request->routeIs('riwayat') && !$request->routeIs('profile.*') && !$request->routeIs('user-password.*') && !$request->routeIs('appearance.*') && !$request->routeIs('two-factor.*')) {
+            if ($userLevel == 1 && !$request->routeIs('dashboard') && !$request->routeIs('riwayat') && !$request->routeIs('employee.*') && !$request->routeIs('profile.*') && !$request->routeIs('user-password.*') && !$request->routeIs('appearance.*') && !$request->routeIs('two-factor.*')) {
                 return redirect()->route('dashboard');
             }
         }
-        
+
         return $next($request);
     }
 }

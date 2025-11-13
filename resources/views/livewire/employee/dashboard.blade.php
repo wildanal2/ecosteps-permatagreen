@@ -9,14 +9,39 @@ new #[Layout('components.layouts.app.header')]
     #[Title('Dashboard Karyawan')]
     class extends Component {
 
+    public $previousStatus = null;
+
     protected $listeners = [
         'refresh-dashboard' => '$refresh',
+        'chart-updated' => '$refresh',
         // 'echo:daily-report-updated' => 'handleReportUpdate'
     ];
 
     public function handleReportUpdate($data)
     {
-        $this->dispatch('$refresh');
+        $this->dispatch('chart-updated');
+    }
+
+    public function getChartData()
+    {
+        $user = auth()->user();
+        $chartDates = collect();
+        for ($i = 6; $i >= 0; $i--) {
+            $chartDates->push(now()->subDays($i));
+        }
+
+        $chartReports = DailyReport::where('user_id', $user->id)
+            ->whereBetween('tanggal_laporan', [now()->subDays(6)->startOfDay(), now()->endOfDay()])
+            ->get()
+            ->keyBy(fn($r) => Carbon::parse($r->tanggal_laporan)->format('Y-m-d'));
+
+        $chartLabels = $chartDates->map(fn($date) => $date->format('D'));
+        $chartSteps = $chartDates->map(fn($date) => $chartReports->get($date->format('Y-m-d'))?->langkah ?? 0);
+
+        return [
+            'labels' => $chartLabels->values(),
+            'steps' => $chartSteps->values()
+        ];
     }
 
     public function with(): array
@@ -58,6 +83,13 @@ new #[Layout('components.layouts.app.header')]
 
         $chartLabels = $chartDates->map(fn($date) => $date->format('D'));
         $chartSteps = $chartDates->map(fn($date) => $chartReports->get($date->format('Y-m-d'))?->langkah ?? 0);
+
+        // Detect status change from pending (1) to approved (2) or rejected (3)
+        $currentStatus = $todayReport?->status_verifikasi?->value;
+        if ($this->previousStatus === 1 && in_array($currentStatus, [2, 3])) {
+            $this->dispatch('status-changed');
+        }
+        $this->previousStatus = $currentStatus;
 
         return [
             'user' => $user,
@@ -165,8 +197,8 @@ new #[Layout('components.layouts.app.header')]
                 </p>
 
                 {{-- Progress --}}
-                <div class="w-full bg-gray-100 rounded-full h-3 mb-3 overflow-hidden">
-                    <div class="{{ $todaySteps >= $targetSteps ? 'bg-green-500' : 'bg-yellow-400' }} h-3 rounded-full transition-all" style="width: {{ $progressPercent }}%;"></div>
+                <div class="w-full bg-gray-100 rounded h-3 mb-3 overflow-hidden">
+                    <div class="h-3 transition-all" style="width: {{ $progressPercent }}%; background: {{ $todaySteps >= $targetSteps ? 'repeating-linear-gradient(90deg, #22c55e 0px, #22c55e 8px, transparent 8px, transparent 10px)' : 'repeating-linear-gradient(90deg, #facc15 0px, #facc15 8px, transparent 8px, transparent 10px)' }};"></div>
                 </div>
                 <p class="text-sm text-gray-700 mb-4">
                     Langkah hari ini <span class="font-semibold">{{ number_format($todaySteps) }}</span>/{{ number_format($targetSteps) }} langkah 🏃
@@ -196,7 +228,9 @@ new #[Layout('components.layouts.app.header')]
                 </p>
 
                 {{-- Chart --}}
-                <canvas id="dashboardChart" class="w-full mb-4" style="max-height: 160px;"></canvas>
+                <div class="w-full mb-4" style="height: 160px;" wire:ignore>
+                    <canvas id="dashboardChart"></canvas>
+                </div>
 
                 <a
                     href="{{ route('riwayat') }}"
@@ -228,23 +262,27 @@ new #[Layout('components.layouts.app.header')]
 <script>
 let dashboardChart = null;
 
-function initDashboardChart() {
+function initDashboardChart(labels, steps) {
     const ctx = document.getElementById('dashboardChart');
     if (!ctx) return;
 
-    if (dashboardChart) {
-        dashboardChart.destroy();
-    }
-
     const isDark = document.documentElement.classList.contains('dark');
+
+    if (dashboardChart) {
+        dashboardChart.data.labels = labels;
+        dashboardChart.data.datasets[0].data = steps;
+        dashboardChart.update();
+        console.log('Chart updated:', steps);
+        return;
+    }
 
     dashboardChart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: @json($chartLabels),
+            labels: labels,
             datasets: [{
                 label: 'Langkah',
-                data: @json($chartSteps),
+                data: steps,
                 backgroundColor: isDark ? 'rgba(96, 165, 250, 0.8)' : 'rgba(59, 130, 246, 0.8)',
                 borderColor: isDark ? 'rgb(96, 165, 250)' : 'rgb(59, 130, 246)',
                 borderWidth: 1,
@@ -255,9 +293,7 @@ function initDashboardChart() {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: {
-                    display: false
-                },
+                legend: { display: false },
                 tooltip: {
                     backgroundColor: isDark ? 'rgba(31, 41, 55, 0.9)' : 'rgba(255, 255, 255, 0.9)',
                     titleColor: isDark ? '#f3f4f6' : '#1f2937',
@@ -269,30 +305,46 @@ function initDashboardChart() {
             scales: {
                 y: {
                     beginAtZero: true,
-                    ticks: {
-                        color: isDark ? '#9ca3af' : '#6b7280'
-                    },
-                    grid: {
-                        color: isDark ? 'rgba(75, 85, 99, 0.3)' : 'rgba(229, 231, 235, 0.8)'
-                    }
+                    ticks: { color: isDark ? '#9ca3af' : '#6b7280' },
+                    grid: { color: isDark ? 'rgba(75, 85, 99, 0.3)' : 'rgba(229, 231, 235, 0.8)' }
                 },
                 x: {
-                    ticks: {
-                        color: isDark ? '#9ca3af' : '#6b7280'
-                    },
-                    grid: {
-                        display: false
-                    }
+                    ticks: { color: isDark ? '#9ca3af' : '#6b7280' },
+                    grid: { display: false }
                 }
             }
         }
     });
+    console.log('Chart created:', steps);
 }
 
-initDashboardChart();
+let isUpdating = false;
 
-$wire.on('$refresh', () => {
-    setTimeout(() => initDashboardChart(), 100);
+initDashboardChart(@json($chartLabels), @json($chartSteps));
+
+Livewire.on('chart-updated', async () => {
+    if (isUpdating) return;
+    isUpdating = true;
+    const data = await $wire.getChartData();
+    initDashboardChart(data.labels, data.steps);
+    setTimeout(() => isUpdating = false, 100);
+});
+
+Livewire.on('status-changed', async () => {
+    if (isUpdating) return;
+    isUpdating = true;
+    const data = await $wire.getChartData();
+    initDashboardChart(data.labels, data.steps);
+    console.log('Status changed, chart updated:', data.steps);
+    setTimeout(() => isUpdating = false, 100);
+});
+
+Livewire.hook('message.processed', async (message, component) => {
+    if (isUpdating) return;
+    isUpdating = true;
+    const data = await $wire.getChartData();
+    initDashboardChart(data.labels, data.steps);
+    setTimeout(() => isUpdating = false, 100);
 });
 </script>
 @endscript
