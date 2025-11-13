@@ -4,8 +4,6 @@ namespace App\Models;
 
 use App\Enums\StatusVerifikasi;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DailyReport extends Model
 {
@@ -17,8 +15,8 @@ class DailyReport extends Model
         'poin',
         'pohon',
         'status_verifikasi',
+        'bukti_screenshot',
         'ocr_result',
-        'bukti_screenshot', // url s3
         'count_document',
         'verified_at',
     ];
@@ -33,12 +31,11 @@ class DailyReport extends Model
         'verified_at' => 'datetime',
     ];
 
-    public function user(): BelongsTo
+    public function user()
     {
         return $this->belongsTo(User::class);
     }
-
-    public function ocrProcessLogs(): HasMany
+    public function ocrProcessLogs()
     {
         return $this->hasMany(OcrProcessLog::class, 'report_id');
     }

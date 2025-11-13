@@ -84,4 +84,12 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasOne(\App\Models\UserStatistic::class);
     }
+
+    /**
+     * Get the user's daily reports
+     */
+    public function dailyReports()
+    {
+        return $this->hasMany(\App\Models\DailyReport::class);
+    }
 }
