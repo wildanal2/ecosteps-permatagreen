@@ -38,23 +38,21 @@ new #[Layout('components.layouts.app.header')]
         // Map setiap tanggal dengan data atau null
         $reports = $weekDates->map(fn($date) => $reportsData->get($date));
 
-        // Chart data (7 hari terakhir)
+        // Chart data (sesuai minggu yang ditampilkan)
+        $chartLabels = collect();
+        $chartSteps = collect();
         $chartDates = collect();
-        for ($i = 6; $i >= 0; $i--) {
-            $chartDates->push(now()->subDays($i));
+        for ($i = 0; $i < 7; $i++) {
+            $date = $startOfWeek->copy()->addDays($i);
+            $chartLabels->push($date->format('D'));
+            $chartDates->push($date->format('d M'));
+            $chartSteps->push($reportsData->get($date->format('Y-m-d'))?->langkah ?? 0);
         }
-        
-        $chartReports = DailyReport::where('user_id', $userId)
-            ->whereBetween('tanggal_laporan', [now()->subDays(6)->startOfDay(), now()->endOfDay()])
-            ->get()
-            ->keyBy(fn($r) => Carbon::parse($r->tanggal_laporan)->format('Y-m-d'));
-        
-        $chartLabels = $chartDates->map(fn($date) => $date->format('D'));
-        $chartSteps = $chartDates->map(fn($date) => $chartReports->get($date->format('Y-m-d'))?->langkah ?? 0);
 
         return [
             'reports' => $reports,
             'chartLabels' => $chartLabels,
+            'chartDates' => $chartDates,
             'chartSteps' => $chartSteps,
             'startOfWeek' => $startOfWeek,
             'endOfWeek' => $endOfWeek,
@@ -64,13 +62,43 @@ new #[Layout('components.layouts.app.header')]
     public function nextWeek()
     {
         $this->weekOffset++;
+        $this->updateChart();
     }
 
     public function prevWeek()
     {
         if ($this->weekOffset > 0) {
             $this->weekOffset--;
+            $this->updateChart();
         }
+    }
+
+    private function updateChart()
+    {
+        $userId = auth()->id();
+        $startOfWeek = now()->subWeeks($this->weekOffset)->startOfWeek();
+        $endOfWeek = now()->subWeeks($this->weekOffset)->endOfWeek();
+
+        $reportsData = DailyReport::where('user_id', $userId)
+            ->whereBetween('tanggal_laporan', [$startOfWeek, $endOfWeek])
+            ->get()
+            ->keyBy(fn($r) => Carbon::parse($r->tanggal_laporan)->format('Y-m-d'));
+
+        $chartLabels = [];
+        $chartDates = [];
+        $chartSteps = [];
+        for ($i = 0; $i < 7; $i++) {
+            $date = $startOfWeek->copy()->addDays($i);
+            $chartLabels[] = $date->format('D');
+            $chartDates[] = $date->format('d M');
+            $chartSteps[] = $reportsData->get($date->format('Y-m-d'))?->langkah ?? 0;
+        }
+
+        $this->dispatch('chart-update', [
+            'labels' => $chartLabels,
+            'dates' => $chartDates,
+            'steps' => $chartSteps
+        ]);
     }
 };
 
@@ -81,7 +109,10 @@ new #[Layout('components.layouts.app.header')]
 
         {{-- Trend Aktivitas --}}
         <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-6">
-            <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-1">Trend Aktivitas</h2>
+            <div class="flex items-center justify-between mb-1">
+                <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">Trend Aktivitas</h2>
+                <span class="text-xs text-gray-500 dark:text-gray-400">{{ $startOfWeek->format('d M') }} - {{ $endOfWeek->format('d M Y') }}</span>
+            </div>
             <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
                 Pantau grafik perkembangan aktivitas berjalan dan pengurangan emisi dari waktu ke waktu.
             </p>
@@ -91,33 +122,39 @@ new #[Layout('components.layouts.app.header')]
         </div>
 
         {{-- Search + Button --}}
-        <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+        {{-- <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
             <input
                 type="text"
                 wire:model.live="search"
                 placeholder="Cari Tanggal..."
                 class="w-full md:w-1/3 rounded-xl border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 placeholder-gray-400 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
-            <flux:button icon="plus" variant="primary" color="blue" href="#">
-                Tambah Laporan
-            </flux:button>
-        </div>
+        </div> --}}
 
         {{-- Navigasi Minggu --}}
-        <div class="flex items-center justify-between">
-            <button wire:click="nextWeek" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600">
-                ← Minggu Lalu
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-4 my-4">
+            <button
+                wire:click="nextWeek"
+                wire:loading.attr="disabled"
+                class="flex items-center justify-center px-3 py-2 sm:px-4 sm:py-2 bg-gray-100 dark:bg-gray-700 rounded-md shadow transition-all hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:cursor-not-allowed w-full sm:w-auto">
+                <flux:icon.chevron-left class="w-4 h-4 mr-1" />
+                <span class="font-medium text-gray-700 dark:text-gray-300 text-sm sm:text-base">Minggu Lalu</span>
             </button>
-            <span class="text-gray-700 dark:text-gray-300 font-medium">
-                {{ $startOfWeek->format('d M') }} - {{ $endOfWeek->format('d M Y') }}
+            <span class="px-3 py-2 sm:px-5 sm:py-2 rounded-xl font-semibold text-sm sm:text-base bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-sm text-gray-800 dark:text-gray-100 select-none text-center w-full sm:w-auto">
+                {{ $startOfWeek->format('d M') }} <span class="text-gray-400 dark:text-gray-400">-</span> {{ $endOfWeek->format('d M Y') }}
             </span>
-            <button wire:click="prevWeek" @if($weekOffset == 0) disabled @endif class="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed">
-                Minggu Depan →
+            <button
+                wire:click="prevWeek"
+                wire:loading.attr="disabled"
+                @if($weekOffset == 0) disabled @endif
+                class="flex items-center justify-center px-3 py-2 sm:px-4 sm:py-2 bg-gray-100 dark:bg-gray-700 rounded-md shadow transition-all hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:cursor-not-allowed w-full sm:w-auto">
+                <span class="font-medium text-gray-700 dark:text-gray-300 text-sm sm:text-base">Minggu Depan</span>
+                <flux:icon.chevron-right class="w-4 h-4 ml-1" />
             </button>
         </div>
 
         {{-- List Laporan --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             @foreach ($reports as $index => $report)
                 @if($report)
                     @php
@@ -156,10 +193,37 @@ new #[Layout('components.layouts.app.header')]
                         </div>
 
                         @if($report->bukti_screenshot)
-                            <button onclick="window.open('{{ Storage::url($report->bukti_screenshot) }}', '_blank')" class="w-full border border-blue-500 text-blue-600 dark:text-blue-400 dark:border-blue-400 py-2 rounded text-sm font-medium hover:bg-blue-50 dark:hover:bg-blue-900/30 flex items-center justify-center gap-2 transition">
+                            <flux:modal name="photo-{{ $report->id }}" class="w-full max-w-5xl">
+                                <div class="grid grid-cols-2 gap-4 p-4">
+                                    <div class="flex items-center justify-center">
+                                        <img src="{{ $report->bukti_screenshot }}" alt="Bukti Screenshot" class="w-full h-auto rounded-lg">
+                                    </div>
+                                    <div class="space-y-3 p-3">
+                                        <div class="shadow p-3 rounded border border-gray-50 flex flex-col">
+                                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Hasil Analisa Sistem</h3>
+                                            @php $ocr = json_decode($report->ocr_result, true); @endphp
+                                            @if($ocr)
+                                                <div class="space-y-2 text-sm">
+                                                    @if(isset($ocr['steps']))<div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">Steps:</span><span class="font-medium text-gray-900 dark:text-gray-100">{{ number_format($ocr['steps']) }}</span></div>@endif
+                                                    {{-- @if(isset($ocr['distance']))<div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">Distance:</span><span class="font-medium text-gray-900 dark:text-gray-100">{{ $ocr['distance'] }}</span></div>@endif
+                                                    @if(isset($ocr['total_calories']))<div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">Calories:</span><span class="font-medium text-gray-900 dark:text-gray-100">{{ $ocr['total_calories'] }}</span></div>@endif
+                                                    @if(isset($ocr['avg_pace']))<div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">Avg Pace:</span><span class="font-medium text-gray-900 dark:text-gray-100">{{ $ocr['avg_pace'] }}</span></div>@endif
+                                                    @if(isset($ocr['avg_speed']))<div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">Avg Speed:</span><span class="font-medium text-gray-900 dark:text-gray-100">{{ $ocr['avg_speed'] }}</span></div>@endif
+                                                    @if(isset($ocr['avg_cadence']))<div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">Avg Cadence:</span><span class="font-medium text-gray-900 dark:text-gray-100">{{ $ocr['avg_cadence'] }}</span></div>@endif
+                                                    @if(isset($ocr['avg_stride']))<div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">Avg Stride:</span><span class="font-medium text-gray-900 dark:text-gray-100">{{ $ocr['avg_stride'] }}</span></div>@endif --}}
+                                                </div>
+                                            @else
+                                                <p class="text-gray-500 dark:text-gray-400 text-sm">Tidak ada data analisa</p>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </flux:modal>
+
+                            <flux:modal.trigger name="photo-{{ $report->id }}" class="w-full border border-blue-500 text-blue-600 dark:text-blue-400 dark:border-blue-400 py-2 rounded text-sm font-medium hover:bg-blue-50 dark:hover:bg-blue-900/30 flex items-center justify-center gap-2 transition">
                                 <i class="ph-fill ph-file-image"></i>
                                 Lihat Foto
-                            </button>
+                            </flux:modal.trigger>
                         @else
                             <div class="w-full border border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-500 py-2 rounded text-sm font-medium text-center">
                                 Tidak ada foto
@@ -167,10 +231,14 @@ new #[Layout('components.layouts.app.header')]
                         @endif
                     </div>
                 @else
+                    @php
+                        $currentDate = $startOfWeek->copy()->addDays($index);
+                        $isFuture = $currentDate->isFuture();
+                    @endphp
                     <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-8 text-center">
-                        <i class="ph ph-file-x text-4xl text-gray-400 dark:text-gray-600 mb-2"></i>
-                        <p class="text-gray-600 dark:text-gray-400 font-medium">Tidak ada data</p>
-                        <p class="text-gray-500 dark:text-gray-500 text-xs mt-1">{{ $startOfWeek->copy()->addDays($index)->format('d M Y') }}</p>
+                        <i class="ph {{ $isFuture ? 'ph-clock' : 'ph-file-x' }} text-4xl text-gray-400 dark:text-gray-600 mb-2"></i>
+                        <p class="text-gray-600 dark:text-gray-400 font-medium">{{ $isFuture ? 'Coming Soon' : 'Tidak ada data' }}</p>
+                        <p class="text-gray-500 dark:text-gray-500 text-xs mt-1">{{ $currentDate->format('d M Y') }}</p>
                     </div>
                 @endif
             @endforeach
@@ -181,24 +249,28 @@ new #[Layout('components.layouts.app.header')]
 @script
 <script>
 let activityChart = null;
+let currentChartDates = @json($chartDates);
 
-function initChart() {
+function createChart(labels, dates, steps) {
     const ctx = document.getElementById('activityChart');
     if (!ctx) return;
-    
+
     if (activityChart) {
         activityChart.destroy();
     }
-    
+
     const isDark = document.documentElement.classList.contains('dark');
-    
+    currentChartDates = dates;
+
+    console.log('Update chart dengan data:', dates);
+
     activityChart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: @json($chartLabels),
+            labels: labels,
             datasets: [{
                 label: 'Langkah',
-                data: @json($chartSteps),
+                data: steps,
                 backgroundColor: isDark ? 'rgba(96, 165, 250, 0.8)' : 'rgba(59, 130, 246, 0.8)',
                 borderColor: isDark ? 'rgb(96, 165, 250)' : 'rgb(59, 130, 246)',
                 borderWidth: 1,
@@ -217,14 +289,25 @@ function initChart() {
                     titleColor: isDark ? '#f3f4f6' : '#1f2937',
                     bodyColor: isDark ? '#f3f4f6' : '#1f2937',
                     borderColor: isDark ? '#4b5563' : '#e5e7eb',
-                    borderWidth: 1
+                    borderWidth: 1,
+                    callbacks: {
+                        title: function(context) {
+                            return currentChartDates[context[0].dataIndex];
+                        },
+                        label: function(context) {
+                            return 'Langkah: ' + Math.floor(context.parsed.y).toLocaleString('id-ID');
+                        }
+                    }
                 }
             },
             scales: {
                 y: {
                     beginAtZero: true,
                     ticks: {
-                        color: isDark ? '#9ca3af' : '#6b7280'
+                        color: isDark ? '#9ca3af' : '#6b7280',
+                        callback: function(value) {
+                            return Math.floor(value).toLocaleString('id-ID');
+                        }
                     },
                     grid: {
                         color: isDark ? 'rgba(75, 85, 99, 0.3)' : 'rgba(229, 231, 235, 0.8)'
@@ -243,10 +326,10 @@ function initChart() {
     });
 }
 
-initChart();
+createChart(@json($chartLabels), @json($chartDates), @json($chartSteps));
 
-$wire.on('$refresh', () => {
-    setTimeout(() => initChart(), 100);
+$wire.on('chart-update', (event) => {
+    createChart(event[0].labels, event[0].dates, event[0].steps);
 });
 </script>
 @endscript

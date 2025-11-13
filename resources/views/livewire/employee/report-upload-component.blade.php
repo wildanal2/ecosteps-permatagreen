@@ -48,21 +48,17 @@
                         <img src="{{ $photo->temporaryUrl() }}" class="max-h-48 rounded-lg mb-3 mx-auto" />
                         <p class="text-sm text-gray-700 font-medium">{{ $photo->getClientOriginalName() }}</p>
                         <p class="text-xs text-gray-500">{{ number_format($photo->getSize() / 1024, 2) }} KB</p>
-                        <button type="button" wire:click="photo = null"
+                        <button type="button" wire:click="removePhoto"
                             class="mt-2 text-red-600 text-sm hover:underline">
                             Hapus
                         </button>
                     </div>
                 @else
-                    <div
-                        class="w-full flex flex-col items-center cursor-pointer"
-                        x-data="{ fileInput: null }"
-                        x-init="fileInput = $refs.input"
-                    >
+                    <div class="w-full flex flex-col items-center cursor-pointer">
                         <i class="ph ph-cloud-arrow-up px-2 py-1 text-2xl bg-white rounded mb-3"></i>
                         <span class="font-medium text-gray-700 mb-2">Pilih file atau drag & drop</span>
                         <input
-                            x-ref="input"
+                            x-ref="fileInput"
                             type="file"
                             wire:model="photo"
                             accept="image/jpeg,image/png,image/jpg"
@@ -74,7 +70,7 @@
                                 type="button"
                                 variant="outline"
                                 color="blue"
-                                @click.prevent="fileInput.click()"
+                                @click.prevent="$refs.fileInput.click()"
                                 class="cursor-pointer"
                             >
                                 Cari File

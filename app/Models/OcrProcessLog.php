@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\FastApiStatus;
+use App\Enums\WalkAppSupport;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -12,6 +13,7 @@ class OcrProcessLog extends Model
         'report_id',
         'request_id',
         'fastapi_status',
+        'detect_aplication_id',
         'ocr_raw',
         'ocr_text_result',
         'received_at',
@@ -19,6 +21,7 @@ class OcrProcessLog extends Model
 
     protected $casts = [
         'fastapi_status' => FastApiStatus::class,
+        'detect_aplication_id' => WalkAppSupport::class,
         'received_at' => 'datetime',
     ];
 

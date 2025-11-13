@@ -30,6 +30,12 @@ class ReportUploadComponent extends Component
         ]);
     }
 
+    public function removePhoto()
+    {
+        $this->reset('photo');
+        $this->resetValidation('photo');
+    }
+
     public function uploadReport()
     {
         $this->isUploading = true;
@@ -100,11 +106,13 @@ class ReportUploadComponent extends Component
                     's3_url' => $s3Url,
                 ]);
 
-                $response = Http::timeout(10)->post($ocrEndpoint, [
-                    'report_id' => $report->id,
-                    'user_id' => $user->id,
-                    's3_url' => $s3Url,
-                ]);
+                $response = Http::timeout(10)
+                    ->withHeaders(['x-api-key' => config('app.ocr_api_key')])
+                    ->post($ocrEndpoint, [
+                        'report_id' => $report->id,
+                        'user_id' => $user->id,
+                        's3_url' => $s3Url,
+                    ]);
 
                 if ($response->successful()) {
                     Log::info('OCR request sent successfully', ['status' => $response->status()]);
@@ -128,7 +136,8 @@ class ReportUploadComponent extends Component
 
             $this->dispatch('close-modal', name: 'upload-harian');
             $this->dispatch('refresh-dashboard');
-
+            // Show success notification
+            flash()->success('Laporan berhasil diunggah!');
             $this->reset(['photo', 'isUploading', 'uploadProgress', 'uploadedUrl', 'showSuccess']);
         } catch (\Exception $e) {
             $this->addError('photo', $e->getMessage());

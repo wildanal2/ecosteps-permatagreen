@@ -50,12 +50,12 @@ new #[Layout('components.layouts.app.header')]
         for ($i = 6; $i >= 0; $i--) {
             $chartDates->push(now()->subDays($i));
         }
-        
+
         $chartReports = DailyReport::where('user_id', $user->id)
             ->whereBetween('tanggal_laporan', [now()->subDays(6)->startOfDay(), now()->endOfDay()])
             ->get()
             ->keyBy(fn($r) => Carbon::parse($r->tanggal_laporan)->format('Y-m-d'));
-        
+
         $chartLabels = $chartDates->map(fn($date) => $date->format('D'));
         $chartSteps = $chartDates->map(fn($date) => $chartReports->get($date->format('Y-m-d'))?->langkah ?? 0);
 
@@ -231,13 +231,13 @@ let dashboardChart = null;
 function initDashboardChart() {
     const ctx = document.getElementById('dashboardChart');
     if (!ctx) return;
-    
+
     if (dashboardChart) {
         dashboardChart.destroy();
     }
-    
+
     const isDark = document.documentElement.classList.contains('dark');
-    
+
     dashboardChart = new Chart(ctx, {
         type: 'bar',
         data: {
