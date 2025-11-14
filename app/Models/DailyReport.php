@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\StatusVerifikasi;
+use App\Enums\VerifiedBy;
 use Illuminate\Database\Eloquent\Model;
 
 class DailyReport extends Model
@@ -19,6 +20,10 @@ class DailyReport extends Model
         'ocr_result',
         'count_document',
         'verified_at',
+        'verified_id',
+        'verified_by',
+        'manual_verification_requested',
+        'manual_verification_requested_at',
     ];
 
     protected $casts = [
@@ -29,6 +34,9 @@ class DailyReport extends Model
         'pohon' => 'decimal:2',
         'status_verifikasi' => StatusVerifikasi::class,
         'verified_at' => 'datetime',
+        'verified_id' => VerifiedBy::class,
+        'manual_verification_requested' => 'boolean',
+        'manual_verification_requested_at' => 'datetime',
     ];
 
     public function user()
@@ -38,5 +46,10 @@ class DailyReport extends Model
     public function ocrProcessLogs()
     {
         return $this->hasMany(OcrProcessLog::class, 'report_id');
+    }
+
+    public function manualVerificationLogs()
+    {
+        return $this->hasMany(ManualVerificationLog::class, 'report_id');
     }
 }

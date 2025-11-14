@@ -164,10 +164,20 @@ new #[Layout('components.layouts.app.header')]
                             3 => ['text' => 'Tidak Valid', 'color' => 'text-red-500', 'badge' => 'bg-red-100 dark:bg-red-900/40'],
                             default => ['text' => 'Proses Verifikasi', 'color' => 'text-amber-500', 'badge' => 'bg-amber-100 dark:bg-amber-900/40'],
                         };
+                        $isToday = Carbon::parse($report->tanggal_laporan)->isToday();
                     @endphp
-                    <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-4 flex flex-col justify-between">
+                    <div class="rounded-2xl border {{ $isToday ? 'border-[#004646]' : 'border-gray-200 dark:border-gray-700' }} bg-white dark:bg-gray-900 {{ $isToday ? 'shadow-[0_0_20px_rgba(0,70,70,0.4)]' : 'shadow-sm' }} p-4 flex flex-col justify-between">
                         <div class="flex items-center justify-between mb-3">
-                            <p class="text-gray-900 dark:text-gray-100 font-semibold">{{ Carbon::parse($report->tanggal_laporan)->format('d M Y') }}</p>
+                            <div class="flex items-center gap-2">
+                                <p class="text-gray-900 dark:text-gray-100 font-semibold mb-0">
+                                    {{ Carbon::parse($report->tanggal_laporan)->format('d M Y') }}
+                                </p>
+                                @if($isToday)
+                                    <span class="inline-block px-1.5 py-0.5 rounded-full bg-[#004646] text-white text-[0.7rem] font-semibold align-middle">
+                                        Hari ini
+                                    </span>
+                                @endif
+                            </div>
                             <span class="text-xs px-2 py-1 rounded-full {{ $statusConfig['badge'] }} {{ $statusConfig['color'] }} font-medium">
                                 {{ $statusConfig['text'] }}
                             </span>
@@ -196,26 +206,25 @@ new #[Layout('components.layouts.app.header')]
                             <flux:modal name="photo-{{ $report->id }}" class="w-full max-w-5xl">
                                 <div class="grid grid-cols-2 gap-4 p-4">
                                     <div class="flex items-center justify-center">
-                                        <img src="{{ $report->bukti_screenshot }}" alt="Bukti Screenshot" class="w-full h-auto rounded-lg">
+                                        <img src="{{ $report->bukti_screenshot }}" alt="Bukti Screenshot" class="w-auto max-h-[80vh] rounded-lg cursor-pointer hover:opacity-90 transition">
                                     </div>
                                     <div class="space-y-3 p-3">
-                                        <div class="shadow p-3 rounded border border-gray-50 flex flex-col">
+                                        @if($report->status_verifikasi->value == 2)
+                                            <div class="shadow p-3 rounded border border-gray-50 flex flex-col">
+                                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Hasil Analisa Sistem</h3>
+                                                @php $ocr = json_decode($report->ocr_result, true); @endphp
+                                                @if($ocr)
+                                                    <div class="space-y-2 text-sm">
+                                                        @if(isset($ocr['steps']))<div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">Steps:</span><span class="font-medium text-gray-900 dark:text-gray-100">{{ number_format($ocr['steps']) }}</span></div>@endif
+                                                    </div>
+                                                @else
+                                                    <p class="text-gray-500 dark:text-gray-400 text-sm">Tidak ada data analisa</p>
+                                                @endif
+                                            </div>
+                                        @else
                                             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Hasil Analisa Sistem</h3>
-                                            @php $ocr = json_decode($report->ocr_result, true); @endphp
-                                            @if($ocr)
-                                                <div class="space-y-2 text-sm">
-                                                    @if(isset($ocr['steps']))<div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">Steps:</span><span class="font-medium text-gray-900 dark:text-gray-100">{{ number_format($ocr['steps']) }}</span></div>@endif
-                                                    {{-- @if(isset($ocr['distance']))<div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">Distance:</span><span class="font-medium text-gray-900 dark:text-gray-100">{{ $ocr['distance'] }}</span></div>@endif
-                                                    @if(isset($ocr['total_calories']))<div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">Calories:</span><span class="font-medium text-gray-900 dark:text-gray-100">{{ $ocr['total_calories'] }}</span></div>@endif
-                                                    @if(isset($ocr['avg_pace']))<div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">Avg Pace:</span><span class="font-medium text-gray-900 dark:text-gray-100">{{ $ocr['avg_pace'] }}</span></div>@endif
-                                                    @if(isset($ocr['avg_speed']))<div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">Avg Speed:</span><span class="font-medium text-gray-900 dark:text-gray-100">{{ $ocr['avg_speed'] }}</span></div>@endif
-                                                    @if(isset($ocr['avg_cadence']))<div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">Avg Cadence:</span><span class="font-medium text-gray-900 dark:text-gray-100">{{ $ocr['avg_cadence'] }}</span></div>@endif
-                                                    @if(isset($ocr['avg_stride']))<div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">Avg Stride:</span><span class="font-medium text-gray-900 dark:text-gray-100">{{ $ocr['avg_stride'] }}</span></div>@endif --}}
-                                                </div>
-                                            @else
-                                                <p class="text-gray-500 dark:text-gray-400 text-sm">Tidak ada data analisa</p>
-                                            @endif
-                                        </div>
+                                            <p class="text-gray-500 dark:text-gray-400 text-sm">Data Tidak valid</p>
+                                        @endif
                                     </div>
                                 </div>
                             </flux:modal>
@@ -234,16 +243,29 @@ new #[Layout('components.layouts.app.header')]
                     @php
                         $currentDate = $startOfWeek->copy()->addDays($index);
                         $isFuture = $currentDate->isFuture();
+                        $isToday = $currentDate->isToday();
                     @endphp
-                    <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-8 text-center">
+                    <div class="rounded-2xl border {{ $isToday ? 'border-[#004646]' : 'border-gray-200 dark:border-gray-700' }} bg-white dark:bg-gray-900 {{ $isToday ? 'shadow-[0_0_10px_rgba(0,70,70,0.4)]' : 'shadow-sm' }} p-8 text-center">
                         <i class="ph {{ $isFuture ? 'ph-clock' : 'ph-file-x' }} text-4xl text-gray-400 dark:text-gray-600 mb-2"></i>
-                        <p class="text-gray-600 dark:text-gray-400 font-medium">{{ $isFuture ? 'Coming Soon' : 'Tidak ada data' }}</p>
+                        @if($isToday)
+                            <br>
+                            <p class="inline-block px-3 py-1 rounded-full bg-[#004646] text-white text-xs font-semibold">
+                                Hari ini
+                            </p>
+                        @endif
+                        <p class="text-gray-600 dark:text-gray-400 font-medium flex items-center justify-center gap-2">
+                            {{ $isFuture ? 'Coming Soon' : 'Tidak ada data' }}
+                        </p>
                         <p class="text-gray-500 dark:text-gray-500 text-xs mt-1">{{ $currentDate->format('d M Y') }}</p>
                     </div>
                 @endif
             @endforeach
         </div>
     </div>
+
+    <x-platform-footer />
+
+
 </flux:main>
 
 @script

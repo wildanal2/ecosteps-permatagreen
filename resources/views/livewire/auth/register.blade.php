@@ -5,6 +5,7 @@ use Livewire\Attributes\{Layout, Title, Rule};
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Enums\Directorate;
 
 new #[Layout('components.layouts.auth')]
     #[Title('Daftar Akun')]
@@ -19,20 +20,8 @@ new #[Layout('components.layouts.auth')]
     #[Rule('required|string|min:6')]
     public string $password = '';
 
-    #[Rule('required|string')]
-    public string $branch = '';
-
-    #[Rule('required|string')]
-    public string $directorate = '';
-
-    #[Rule('required|string')]
-    public string $transport = '';
-
-    #[Rule('required|numeric|min:0')]
-    public ?float $distance = null;
-
-    #[Rule('required|in:WFO,WFH')]
-    public string $work_mode = 'WFO';
+    #[Rule('required|integer|min:1')]
+    public int $directorate = 0;
 
     public function updated($property)
     {
@@ -49,12 +38,8 @@ new #[Layout('components.layouts.auth')]
             'email.unique' => 'Email sudah terdaftar.',
             'password.required' => 'Password wajib diisi.',
             'password.min' => 'Password minimal :min karakter.',
-            'branch.required' => 'Cabang wajib dipilih.',
             'directorate.required' => 'Direktorat wajib dipilih.',
-            'transport.required' => 'Kendaraan wajib dipilih.',
-            'distance.numeric' => 'Jarak harus berupa angka.',
-            'distance.min' => 'Jarak tidak boleh negatif.',
-            'work_mode.required' => 'Mode kerja wajib dipilih.',
+            'directorate.min' => 'Direktorat wajib dipilih.',
         ];
     }
 
@@ -64,11 +49,7 @@ new #[Layout('components.layouts.auth')]
             'name' => 'Nama Lengkap',
             'email' => 'Email Corporate',
             'password' => 'Password',
-            'branch' => 'Cabang',
             'directorate' => 'Direktorat',
-            'transport' => 'Kendaraan',
-            'distance' => 'Jarak',
-            'work_mode' => 'Mode Kerja',
         ];
     }
 
@@ -80,12 +61,15 @@ new #[Layout('components.layouts.auth')]
 
         $user = User::create($validated);
 
-        $user->sendEmailVerificationNotification();
+        if (config('fortify.features') && in_array('emailVerification', array_keys(config('fortify.features')))) {
+            $user->sendEmailVerificationNotification();
+            session()->put('registered_email', $user->email);
+            session()->put('verification_email', $user->email);
+            return redirect()->route('verification.notice');
+        }
 
-        session()->put('registered_email', $user->email);
-        session()->put('verification_email', $user->email);
-
-        return redirect()->route('verification.notice');
+        Auth::login($user);
+        return redirect()->route('dashboard');
     }
 };
 
@@ -121,54 +105,13 @@ new #[Layout('components.layouts.auth')]
             <flux:input wire:model.blur="password" name="password" type="password" label="Password" placeholder="***************" />
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {{-- Cabang --}}
-            <div>
-                <flux:select wire:model.live="branch" name="branch" label="Cabang" placeholder="Pilih cabang">
-                    <flux:select.option value="jakarta">Jakarta</flux:select.option>
-                    <flux:select.option value="bandung">Bandung</flux:select.option>
-                    <flux:select.option value="surabaya">Surabaya</flux:select.option>
-                </flux:select>
-            </div>
-
-            {{-- Direktorat --}}
-            <div>
-                <flux:select wire:model.live="directorate" name="directorate" label="Direktorat" placeholder="Pilih direktorat">
-                    <flux:select.option value="retail">Retail Banking</flux:select.option>
-                    <flux:select.option value="corporate">Corporate Banking</flux:select.option>
-                    <flux:select.option value="it">Information Technology</flux:select.option>
-                </flux:select>
-            </div>
-
-            {{-- Kendaraan --}}
-            <div>
-                <flux:select wire:model.live="transport" name="transport" label="Kendaraan ke Kantor" placeholder="Pilih jenis kendaraan">
-                    <flux:select.option value="mobil">Mobil</flux:select.option>
-                    <flux:select.option value="motor">Motor</flux:select.option>
-                    <flux:select.option value="sepeda">Sepeda</flux:select.option>
-                    <flux:select.option value="transportasi_umum">Transportasi Umum</flux:select.option>
-                    <flux:select.option value="jalan_kaki">Jalan Kaki</flux:select.option>
-                </flux:select>
-            </div>
-
-            {{-- Jarak Rumah ke Kantor --}}
-            <div>
-                <flux:input wire:model.blur="distance" name="distance" type="number" step="0.1" min="0" label="Jarak rumah ke kantor (km)" placeholder="Masukkan jarak (km)" />
-            </div>
-        </div>
-        {{-- Mode Kerja --}}
+        {{-- Direktorat --}}
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Mode Kerja Saat ini</label>
-            <div class="flex items-center gap-4">
-                <label class="flex items-center gap-2">
-                    <input wire:model.live="work_mode" type="radio" name="work_mode" value="WFO" class="text-emerald-600 focus:ring-emerald-500">
-                    <span class="text-gray-700 text-sm">WFO</span>
-                </label>
-                <label class="flex items-center gap-2">
-                    <input wire:model.live="work_mode" type="radio" name="work_mode" value="WFH" class="text-emerald-600 focus:ring-emerald-500">
-                    <span class="text-gray-700 text-sm">WFH</span>
-                </label>
-            </div>
+            <flux:select wire:model.live="directorate" name="directorate" label="Direktorat" placeholder="Pilih direktorat">
+                @foreach(App\Enums\Directorate::cases() as $dir)
+                    <flux:select.option value="{{ $dir->value }}">{{ $dir->label() }}</flux:select.option>
+                @endforeach
+            </flux:select>
         </div>
 
         {{-- Submit --}}

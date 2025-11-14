@@ -64,10 +64,10 @@ new #[Layout('components.layouts.auth')]
     <div class="w-full p-8 max-w-md lg:max-w-full bg-white lg:bg-gray-50 rounded-2xl shadow-sm lg:shadow-none">
 
         {{-- Header --}}
-        <div class="flex flex-col items-center gap-2 text-center mb-5">
-            <img src="{{ asset('assets/images/permata-logo.png') }}" alt="Permata Bank" class="h-8 mb-2">
-            <h1 class="text-2xl font-semibold text-gray-900">Selamat Datang</h1>
-            <p class="text-sm text-gray-500">Ayo mulai perjalanan hijau dengan langkah kecilmu hari ini.</p>
+        <div class="flex flex-col items-start gap-2 text-left mb-5">
+            <img src="{{ asset('assets/images/logo.png') }}" alt="Permata Bank" class="h-18 mb-2">
+            <h1 class="text-3xl font-semibold text-gray-900">Selamat Datang</h1>
+            <p class="text-sm text-gray-500">Challenge 1 bulan untuk seluruh Permata Bankers guna membangun kebiasaan sehat dan ramah lingkungan.</p>
         </div>
 
         {{-- Session Status --}}
@@ -88,7 +88,7 @@ new #[Layout('components.layouts.auth')]
                 <div class="flex items-center justify-between mb-1">
                     <label class="text-sm font-medium text-gray-700">Password</label>
                 </div>
-                <flux:input wire:model.blur="password" name="password" type="password" placeholder="***************" />
+                <flux:input wire:model.blur="password" name="password" type="password" placeholder="***************" viewable/>
                 @error('password') <span class="text-red-600 text-sm mt-1">{{ $message }}</span> @enderror
             </div>
 
@@ -115,5 +115,6 @@ new #[Layout('components.layouts.auth')]
                 </a>
             </div>
         </div>
+        <x-platform-footer />
     </div>
 </div>

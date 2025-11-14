@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Enums\FastApiStatus;
 use App\Enums\StatusVerifikasi;
+use App\Enums\VerifiedBy;
 use App\Enums\WalkAppSupport;
 use App\Events\DailyReportUpdated;
 use App\Http\Controllers\Controller;
 use App\Models\{DailyReport, UserStatistic, OcrProcessLog};
+use App\Services\ReportCalculationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{DB, Log};
 
@@ -20,6 +22,7 @@ class OcrResultController extends Controller
         $validated = $request->validate([
             'report_id' => 'required|integer|exists:daily_reports,id',
             'user_id' => 'required|integer|exists:users,id',
+            'img_url' => 'nullable',
             'raw_ocr' => 'nullable',
             'extracted_data' => 'nullable',
             'app_class' => 'nullable',
@@ -50,6 +53,8 @@ class OcrResultController extends Controller
                 'ocr_text_result' => json_encode($extractedData),
                 'detect_aplication_id' => $detectAplicationId,
                 'received_at' => now(),
+                'img_url' => $validated['img_url'] ?? null,
+                'verified_id' => VerifiedBy::SISTEM,
             ]);
 
             Log::info('OcrProcessLog saved', ['log_id' => $ocrLog->id, 'report_id' => $validated['report_id']]);
@@ -76,6 +81,7 @@ class OcrResultController extends Controller
                     $report->update([
                         'status_verifikasi' => StatusVerifikasi::DITOLAK,
                         'verified_at' => now(),
+                        'verified_id' => VerifiedBy::SISTEM,
                     ]);
 
                     Log::info('DailyReport rejected - no valid steps', ['report_id' => $report->id]);
@@ -85,26 +91,18 @@ class OcrResultController extends Controller
                     return response()->json(['success' => true, 'report_id' => $report->id, 'status' => 'rejected']);
                 }
 
-                $co2e = round($steps * 0.000064, 2);
-                $pohon = floor($steps / 10000);
-
-                Log::info('Calculated values', ['steps' => $steps, 'co2e' => $co2e, 'pohon' => $pohon]);
-
                 $report->update([
-                    'langkah' => $steps,
-                    'co2e_reduction_kg' => $co2e,
-                    'pohon' => $pohon,
-                    'poin' => $steps,
                     'ocr_result' => json_encode($extractedData),
                     'status_verifikasi' => StatusVerifikasi::DIVERIFIKASI,
                     'verified_at' => now(),
+                    'verified_id' => VerifiedBy::SISTEM,
                 ]);
 
                 Log::info('DailyReport updated', ['report_id' => $report->id, 'status' => $report->status_verifikasi->value]);
 
-                $this->recalculateUserStatistics($validated['user_id']);
+                app(ReportCalculationService::class)->recalculate($report->id, $steps);
 
-                Log::info('UserStatistic recalculated', ['user_id' => $validated['user_id']]);
+                Log::info('Report recalculated', ['report_id' => $report->id, 'user_id' => $validated['user_id']]);
 
                 broadcast(new DailyReportUpdated($validated['user_id'], $report->id, 'verified'));
 
@@ -125,48 +123,5 @@ class OcrResultController extends Controller
         }
     }
 
-    private function recalculateUserStatistics(int $userId): void
-    {
-        $reports = DailyReport::where('user_id', $userId)
-            ->where('status_verifikasi', StatusVerifikasi::DIVERIFIKASI)
-            ->get();
 
-        $totalLangkah = $reports->sum('langkah');
-        $totalCo2e = $reports->sum('co2e_reduction_kg');
-        $totalPohon = $reports->sum('pohon');
-
-        $currentStreak = $this->calculateStreak($userId);
-
-        $stats = UserStatistic::firstOrCreate(['user_id' => $userId]);
-        $stats->update([
-            'total_langkah' => $totalLangkah,
-            'total_co2e_kg' => $totalCo2e,
-            'total_pohon' => $totalPohon,
-            'current_streak' => $currentStreak,
-            'last_update' => now(),
-        ]);
-    }
-
-    private function calculateStreak(int $userId): int
-    {
-        $streak = 0;
-        $currentDate = now()->startOfDay();
-
-        while (true) {
-            $report = DailyReport::where('user_id', $userId)
-                ->where('tanggal_laporan', $currentDate->toDateString())
-                ->where('status_verifikasi', StatusVerifikasi::DIVERIFIKASI)
-                ->where('langkah', '>', 0)
-                ->first();
-
-            if (!$report) {
-                break;
-            }
-
-            $streak++;
-            $currentDate->subDay();
-        }
-
-        return $streak;
-    }
 }

@@ -93,7 +93,7 @@ new #[Layout('components.layouts.app-header')]
                 <flux:label>Foto Profil</flux:label>
                 <div class="mt-2 flex items-center gap-4">
                     @if (auth()->user()->profile_photo)
-                        <img src="{{ Storage::disk('s3')->url(auth()->user()->profile_photo) }}" class="h-20 w-20 rounded-full object-cover" alt="Profile">
+                        <img src="{{ Storage::disk('s3')->url(auth()->user()->profile_photo) }}" class="h-20 w-20 rounded-lg object-cover" alt="Profile">
                     @else
                         <div class="h-20 w-20 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xl font-semibold">
                             {{ auth()->user()->initials() }}
@@ -104,6 +104,9 @@ new #[Layout('components.layouts.app-header')]
                             Pilih Foto
                         </label>
                         <input id="photo-upload" type="file" wire:model="photo" accept="image/*" class="hidden">
+                        @if ($photo)
+                            <p class="text-sm text-green-600 mt-1 font-medium">{{ $photo->getClientOriginalName() }}</p>
+                        @endif
                         <p class="text-xs text-gray-500 mt-1">Maksimal 2MB (JPG, PNG, GIF)</p>
                     </div>
                 </div>

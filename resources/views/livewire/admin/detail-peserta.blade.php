@@ -21,7 +21,14 @@ new #[Layout('components.layouts.app')] #[Title('Detail Peserta')] class extends
 
     public function with(): array
     {
+        // Get participant rank
+        $rank = User::where('user_level', 1)
+            ->join('user_statistics', 'users.id', '=', 'user_statistics.user_id')
+            ->where('user_statistics.total_langkah', '>', $this->participant->statistics->total_langkah ?? 0)
+            ->count() + 1;
+
         return [
+            'rank' => $rank,
             'reports' => DailyReport::where('user_id', $this->userId)
                 ->when($this->searchDate, fn($q) => $q->whereDate('tanggal_laporan', 'like', '%' . $this->searchDate . '%')
                     ->orWhere('tanggal_laporan', 'like', '%' . $this->searchDate . '%'))
@@ -53,7 +60,7 @@ new #[Layout('components.layouts.app')] #[Title('Detail Peserta')] class extends
     </div>
 
     <div class="max-w-7xl mx-auto space-y-6">
-        <div class="bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 p-6 rounded-2xl shadow-md w-full">
+        <div class="bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 p-6 rounded-2xl border border-gray-100 shadow-md w-full">
             <!-- Header -->
             <div class="mb-6 flex items-center justify-between">
                 <h2 class="text-2xl font-semibold">{{ $participant->name }}</h2>
@@ -63,23 +70,33 @@ new #[Layout('components.layouts.app')] #[Title('Detail Peserta')] class extends
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <!-- Ranking -->
                 <div class="border dark:border-gray-700 rounded-xl p-4 flex items-center gap-3">
-                    <div class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-blue-600 dark:text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                        </svg>
+                    <div class="bg-white p-1.5 rounded-xl border-[2px] border-[#ededed] flex items-center justify-center">
+                        <div class="bg-[#c1fdc6] border border-[#ededed] rounded-lg w-8 h-8 flex items-center justify-center">
+                            <i class="ph-fill ph-medal text-[#004946] text-2xl"></i>
+                        </div>
                     </div>
                     <div>
                         <p class="text-sm text-gray-500 dark:text-gray-400">Ranking Peserta:</p>
-                        <p class="font-medium">-</p>
+                        <p class="font-medium">
+                            @if($rank == 1)
+                                🥇 #{{ $rank }}
+                            @elseif($rank == 2)
+                                🥈 #{{ $rank }}
+                            @elseif($rank == 3)
+                                🥉 #{{ $rank }}
+                            @else
+                                #{{ $rank }}
+                            @endif
+                        </p>
                     </div>
                 </div>
 
                 <!-- Total CO2e -->
                 <div class="border dark:border-gray-700 rounded-xl p-4 flex items-center gap-3">
-                    <div class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-blue-600 dark:text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+                    <div class="bg-white p-1.5 rounded-xl border-[2px] border-[#ededed] flex items-center justify-center">
+                        <div class="bg-[#c1fdc6] border border-[#ededed] rounded-lg w-8 h-8 flex items-center justify-center">
+                            <i class="ph-fill ph-globe-hemisphere-east text-[#004946] text-2xl"></i>
+                        </div>
                     </div>
                     <div>
                         <p class="text-sm text-gray-500 dark:text-gray-400">Total CO₂e:</p>
@@ -89,10 +106,10 @@ new #[Layout('components.layouts.app')] #[Title('Detail Peserta')] class extends
 
                 <!-- Total Langkah -->
                 <div class="border dark:border-gray-700 rounded-xl p-4 flex items-center gap-3">
-                    <div class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-blue-600 dark:text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                        </svg>
+                    <div class="bg-white p-1.5 rounded-xl border-[2px] border-[#ededed] flex items-center justify-center">
+                        <div class="bg-[#c1fdc6] border border-[#ededed] rounded-lg w-8 h-8 flex items-center justify-center">
+                            <i class="ph-fill ph-footprints text-[#004946] text-2xl"></i>
+                        </div>
                     </div>
                     <div>
                         <p class="text-sm text-gray-500 dark:text-gray-400">Total Langkah:</p>
@@ -102,10 +119,10 @@ new #[Layout('components.layouts.app')] #[Title('Detail Peserta')] class extends
 
                 <!-- Konversi Pohon -->
                 <div class="border dark:border-gray-700 rounded-xl p-4 flex items-center gap-3">
-                    <div class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-blue-600 dark:text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                        </svg>
+                    <div class="bg-white p-1.5 rounded-xl border-[2px] border-[#ededed] flex items-center justify-center">
+                        <div class="bg-[#c1fdc6] border border-[#ededed] rounded-lg w-8 h-8 flex items-center justify-center">
+                            <i class="ph-fill ph-tree-evergreen text-[#004946] text-2xl"></i>
+                        </div>
                     </div>
                     <div>
                         <p class="text-sm text-gray-500 dark:text-gray-400">Konversi Pohon:</p>
@@ -117,28 +134,13 @@ new #[Layout('components.layouts.app')] #[Title('Detail Peserta')] class extends
             <!-- Detail Info -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-gray-600 dark:text-gray-400">
                 <div>
-                    <p class="font-medium text-gray-800 dark:text-gray-200">Cabang</p>
-                    <p>{{ $participant->branch ?? '-' }}</p>
-                </div>
-                <div>
-                    <p class="font-medium text-gray-800 dark:text-gray-200">Direktorat</p>
-                    <p>{{ $participant->directorate ?? '-' }}</p>
-                </div>
-                <div>
-                    <p class="font-medium text-gray-800 dark:text-gray-200">Jarak Rumah ke Kantor</p>
-                    <p>{{ $participant->distance ?? 0 }} km</p>
-                </div>
-                <div>
-                    <p class="font-medium text-gray-800 dark:text-gray-200">Kendaraan ke Kantor</p>
-                    <p>{{ $participant->transport ?? '-' }}</p>
-                </div>
-                <div>
                     <p class="font-medium text-gray-800 dark:text-gray-200">Email</p>
                     <p>{{ $participant->email }}</p>
                 </div>
+
                 <div>
-                    <p class="font-medium text-gray-800 dark:text-gray-200">Mode Kerja</p>
-                    <p>{{ $participant->work_mode ?? '-' }}</p>
+                    <p class="font-medium text-gray-800 dark:text-gray-200">Direktorat</p>
+                    <p>{{ $participant->directorate->label() ?? '-' }}</p>
                 </div>
             </div>
         </div>
@@ -174,9 +176,9 @@ new #[Layout('components.layouts.app')] #[Title('Detail Peserta')] class extends
                         @forelse($reports as $report)
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/60 border-b border-gray-100 dark:border-gray-700">
                                 <td class="py-3 px-4 whitespace-nowrap">{{ \Carbon\Carbon::parse($report->tanggal_laporan)->format('d F Y') }}</td>
-                                <td class="py-3 px-4">{{ number_format($report->langkah * 0.0008, 1) }} km</td>
-                                <td class="py-3 px-4">{{ number_format($report->co2e_reduction_kg, 1) }} kg</td>
-                                <td class="py-3 px-4">{{ number_format($report->pohon, 0) }} pohon</td>
+                                <td class="py-3 px-4">{{ number_format($report->langkah, 0, ',', '.') }} km</td>
+                                <td class="py-3 px-4">{{ number_format($report->co2e_reduction_kg, 1, ',', '.') }} kg</td>
+                                <td class="py-3 px-4">{{ number_format($report->pohon, 0, ',', '.') }} pohon</td>
                                 <td class="py-3 px-4">
                                     @if($report->bukti_screenshot)
                                         <a href="{{ $report->bukti_screenshot }}" data-fancybox="gallery-{{ $report->id }}" data-caption="Bukti Screenshot - {{ \Carbon\Carbon::parse($report->tanggal_laporan)->format('d F Y') }}" class="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">

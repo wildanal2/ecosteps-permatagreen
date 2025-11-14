@@ -45,7 +45,6 @@ new #[Layout('components.layouts.app')] #[Title('Data Peserta')] class extends C
 
         <div>
             <flux:button wire:click="export" variant="outline" icon="arrow-down-tray">Unduh Data</flux:button>
-            <flux:button icon="plus">Tambah Peserta</flux:button>
         </div>
     </div>
 
@@ -71,7 +70,7 @@ new #[Layout('components.layouts.app')] #[Title('Data Peserta')] class extends C
                                 Direktorat</th>
                             <th
                                 class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                                Total Jarak</th>
+                                Total Langkah</th>
                             <th
                                 class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                                 CO₂e Dihindari</th>
@@ -92,14 +91,14 @@ new #[Layout('components.layouts.app')] #[Title('Data Peserta')] class extends C
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">
                                     {{ $participant->name }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">
-                                    {{ $participant->directorate ?? '-' }}</td>
+                                    {{ $participant->directorate->label() ?? '-' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">
-                                    {{ number_format(($participant->statistics->total_langkah ?? 0) * 0.0008, 1) }} km
+                                    {{ number_format(($participant->statistics->total_langkah ?? 0), 0, ',', '.') }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">
-                                    {{ number_format($participant->statistics->total_co2e_kg ?? 0, 1) }} kg</td>
+                                    {{ number_format($participant->statistics->total_co2e_kg ?? 0, 1, ',', '.') }} kg</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">
-                                    {{ number_format($participant->statistics->total_pohon ?? 0, 0) }} pohon</td>
+                                    {{ number_format($participant->statistics->total_pohon ?? 0, 0, ',', '.') }} pohon</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">
                                     {{ $participant->statistics->current_streak ?? 0 }} hari</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-center text-sm">

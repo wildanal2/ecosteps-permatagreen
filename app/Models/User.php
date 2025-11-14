@@ -9,8 +9,9 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use App\Notifications\CustomVerifyEmail;
+use App\Enums\Directorate;
 
-class User extends Authenticatable implements MustVerifyEmail
+class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, TwoFactorAuthenticatable;
@@ -25,11 +26,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'profile_photo',
-        'branch',
         'directorate',
-        'transport',
-        'distance',
-        'work_mode',
         'user_level'
     ];
 
@@ -55,6 +52,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'directorate' => Directorate::class,
         ];
     }
 

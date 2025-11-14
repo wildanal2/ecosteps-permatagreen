@@ -4,6 +4,8 @@ use Livewire\Volt\Component;
 use Livewire\Attributes\{Layout, Title};
 use App\Models\{UserStatistic, DailyReport};
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 new #[Layout('components.layouts.app.header')]
     #[Title('Dashboard Karyawan')]
@@ -20,6 +22,23 @@ new #[Layout('components.layouts.app.header')]
     public function handleReportUpdate($data)
     {
         $this->dispatch('chart-updated');
+    }
+
+    public function requestManualVerification()
+    {
+        $todayReport = DailyReport::where('user_id', auth()->id())
+            ->whereDate('tanggal_laporan', today())
+            ->first();
+
+        if ($todayReport && $todayReport->status_verifikasi->value === 3) {
+            $todayReport->update([
+                'status_verifikasi' => \App\Enums\StatusVerifikasi::PENDING,
+                'manual_verification_requested' => true,
+                'manual_verification_requested_at' => now(),
+            ]);
+
+            flash()->info('Permintaan verifikasi manual telah diajukan. Mohon tunggu admin untuk memverifikasi.');
+        }
     }
 
     public function getChartData()
@@ -91,6 +110,38 @@ new #[Layout('components.layouts.app.header')]
         }
         $this->previousStatus = $currentStatus;
 
+        // Leaderboard data
+        $leaderboard = UserStatistic::with('user')
+            ->join('users', 'user_statistics.user_id', '=', 'users.id')
+            ->where('users.user_level', 1)
+            ->orderByDesc('user_statistics.total_langkah')
+            ->select('user_statistics.*')
+            ->take(10)
+            ->get();
+
+        // User ranking
+        $userRank = UserStatistic::join('users', 'user_statistics.user_id', '=', 'users.id')
+            ->where('users.user_level', 1)
+            ->where('user_statistics.total_langkah', '>', $stats->total_langkah)
+            ->count() + 1;
+
+        // User above and below
+        $userAbove = UserStatistic::with('user')
+            ->join('users', 'user_statistics.user_id', '=', 'users.id')
+            ->where('users.user_level', 1)
+            ->where('user_statistics.total_langkah', '>', $stats->total_langkah)
+            ->orderBy('user_statistics.total_langkah')
+            ->select('user_statistics.*')
+            ->first();
+
+        $userBelow = UserStatistic::with('user')
+            ->join('users', 'user_statistics.user_id', '=', 'users.id')
+            ->where('users.user_level', 1)
+            ->where('user_statistics.total_langkah', '<', $stats->total_langkah)
+            ->orderByDesc('user_statistics.total_langkah')
+            ->select('user_statistics.*')
+            ->first();
+
         return [
             'user' => $user,
             'stats' => $stats,
@@ -101,6 +152,10 @@ new #[Layout('components.layouts.app.header')]
             'chartLabels' => $chartLabels,
             'chartSteps' => $chartSteps,
             'hasReportedToday' => $todayReport !== null,
+            'leaderboard' => $leaderboard,
+            'userRank' => $userRank,
+            'userAbove' => $userAbove,
+            'userBelow' => $userBelow,
         ];
     }
 };
@@ -112,8 +167,11 @@ new #[Layout('components.layouts.app.header')]
         {{-- Header --}}
         <div>
             <h2 class="text-xl font-semibold text-gray-800">
-                Halo, <span class="text-gray-900 font-bold">{{ $user->name }}</span> ({{ $user->branch }})
+                Selamat datang di Walk for Elephant, <span class="text-gray-900 font-bold">{{ $user->name }}</span>
             </h2>
+            <p class="text-sm text-gray-600 mb-4">
+                Lihat progres langkah anda hari ini dan sejauh mana anda berkontribusi dalam gerakan hijau.
+            </p>
 
             {{-- Alert --}}
             @if(!$hasReportedToday)
@@ -124,66 +182,35 @@ new #[Layout('components.layouts.app.header')]
             @elseif($todayReport && $todayReport->status_verifikasi->value === 1)
                 <div class="mt-3 rounded-xl bg-blue-100 text-blue-700 px-4 py-3 flex items-center gap-2" wire:poll.5s="$refresh">
                     <flux:icon.information-circle class="w-5 h-5" />
-                    <span>Laporan Anda sedang dalam proses verifikasi</span>
+                    <span>Laporan Anda sedang dalam proses verifikasi {{ $todayReport->manual_verification_requested ? "oleh Admin":"sistem" }}</span>
                 </div>
             @elseif($todayReport && $todayReport->status_verifikasi->value === 3)
-                <div class="mt-3 rounded-xl bg-red-100 text-red-700 px-4 py-3 flex items-center gap-2">
-                    <flux:icon.x-circle class="w-5 h-5" />
-                    <span>Laporan Anda ditolak. Silakan upload ulang dengan bukti yang valid</span>
+                <div class="mt-3 rounded-xl flex justify-between items-center bg-red-100 text-red-700 px-4 py-3">
+                    <div class="flex items-center gap-2 mb-2">
+                        <flux:icon.x-circle class="w-5 h-5" />
+                        <span>Langkah anda gagal terverifikasi</span>
+                    </div>
+                    @if(!$todayReport->manual_verification_requested)
+                        <button
+                            wire:click="requestManualVerification"
+                            size="sm"
+                            class="bg-red-600 text-white px-4 py-2 rounded-lg text-xs font-medium hover:bg-red-700 transition">
+                            Ajukan Verifikasi Manual
+                        </button>
+                    @else
+                        <p class="mt-2 text-sm text-red-600">✓ Verifikasi manual telah diajukan</p>
+                    @endif
                 </div>
             @endif
         </div>
 
-        {{-- Grid Statistik Atas --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="rounded-2xl bg-white p-4 shadow-sm border border-gray-100">
-                <p class="text-sm text-gray-600 mb-3">CO₂e yang dihindari:</p>
-                <div class="flex items-center gap-2 mt-1">
-                    <span class="flex items-center justify-center p-1 border border-gray-100 rounded shadow-sm">
-                        <i class="ph-fill ph-globe-hemisphere-east text-blue-600 bg-blue-200 rounded p-0.5 text-2xl flex items-center justify-center"></i>
-                    </span>
-                    <p class="text-lg font-semibold text-gray-900">{{ number_format($stats->total_co2e_kg, 2) }} kg</p>
-                </div>
-            </div>
-
-            <div class="rounded-2xl bg-white p-4 shadow-sm border border-gray-100">
-                <p class="text-sm text-gray-600 mb-3">Akumulasi Langkah:</p>
-                <div class="flex items-center gap-2 mt-1">
-                    <span class="flex items-center justify-center p-1 border border-gray-100 rounded shadow-sm">
-                        <i class="ph-fill ph-footprints text-blue-600 bg-blue-200 rounded p-0.5 text-2xl flex items-center justify-center"></i>
-                    </span>
-                    <p class="text-lg font-semibold text-gray-900">{{ number_format($stats->total_langkah) }} langkah</p>
-                </div>
-            </div>
-
-            <div class="rounded-2xl bg-white p-4 shadow-sm border border-gray-100">
-                <p class="text-sm text-gray-600 mb-3">Streak:</p>
-                <div class="flex items-center gap-2 mt-1">
-                    <span class="flex items-center justify-center p-1 border border-gray-100 rounded shadow-sm">
-                        <i class="ph-fill ph-fire text-blue-600 bg-blue-200 rounded p-0.5 text-2xl flex items-center justify-center"></i>
-                    </span>
-                    <p class="text-lg font-semibold text-gray-900">{{ $stats->current_streak }} hari streak</p>
-                </div>
-            </div>
-
-            <div class="rounded-2xl bg-white p-4 shadow-sm border border-gray-100">
-                <p class="text-sm text-gray-600 mb-3">Pohon:</p>
-                <div class="flex items-center gap-2 mt-1">
-                    <span class="flex items-center justify-center p-1 border border-gray-100 rounded shadow-sm">
-                        <i class="ph-fill ph-tree-evergreen text-blue-600 bg-blue-200 rounded p-0.5 text-2xl flex items-center justify-center"></i>
-                    </span>
-                    <p class="text-lg font-semibold text-gray-900">{{ number_format($stats->total_pohon, 0) }} pohon</p>
-                </div>
-            </div>
-        </div>
-
-        {{-- Grid Bawah --}}
+        {{-- Grid Atas --}}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-            {{-- Walk Track --}}
+            {{-- Progres Harian --}}
             <div class="rounded-2xl bg-white p-5 shadow-sm border border-gray-100">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold text-gray-800">Walk Track</h3>
+                    <h3 class="text-lg font-semibold text-gray-800">Progres Harian</h3>
                     @if($todaySteps == 0)
                         <span class="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">Belum Mulai</span>
                     @elseif($todaySteps >= $targetSteps)
@@ -193,16 +220,18 @@ new #[Layout('components.layouts.app.header')]
                     @endif
                 </div>
                 <p class="text-sm text-gray-600 mb-4">
-                    Setiap langkah yang kamu ambil bukan hanya menambah poin, tapi juga mengurangi jejak karbon.
+                    Setiap langkah yang anda ambil bukan hanya menambah poin, tapi juga mengurangi jejak karbon
                 </p>
 
                 {{-- Progress --}}
-                <div class="w-full bg-gray-100 rounded h-3 mb-3 overflow-hidden">
-                    <div class="h-3 transition-all" style="width: {{ $progressPercent }}%; background: {{ $todaySteps >= $targetSteps ? 'repeating-linear-gradient(90deg, #22c55e 0px, #22c55e 8px, transparent 8px, transparent 10px)' : 'repeating-linear-gradient(90deg, #facc15 0px, #facc15 8px, transparent 8px, transparent 10px)' }};"></div>
+                <div class="relative w-full bg-gray-100 rounded-md h-10 mb-4 overflow-hidden">
+                    <div class="absolute h-10 transition-all" style="width: {{ $progressPercent }}%; background: {{ $todaySteps >= $targetSteps ? 'repeating-linear-gradient(90deg, #004646 0px, #004646 8px, transparent 8px, transparent 10px)' : 'repeating-linear-gradient(90deg, #facc15 0px, #facc15 8px, transparent 8px, transparent 10px)' }};"></div>
+                    <div class="absolute inset-0 flex items-center justify-center z-10">
+                        <p class="text-xs text-gray-800 font-medium px-1.5 py-0.5 rounded-md" style="backdrop-filter: blur(9px); background: rgba(255,255,255,0.45); box-shadow: 0 2px 14px 0 rgba(0,0,0,0.06); ">
+                            Langkah hari ini <span class="font-bold text-base mx-1">{{ number_format($todaySteps, 0, ',', '.') }}</span>/{{ number_format($targetSteps, 0, ',', '.') }} langkah 🏃
+                        </p>
+                    </div>
                 </div>
-                <p class="text-sm text-gray-700 mb-4">
-                    Langkah hari ini <span class="font-semibold">{{ number_format($todaySteps) }}</span>/{{ number_format($targetSteps) }} langkah 🏃
-                </p>
 
                 <flux:modal.trigger name="upload-harian">
                     <button class="w-full bg-blue-600 text-white py-2 rounded-xl font-semibold hover:bg-blue-700 transition">
@@ -210,7 +239,6 @@ new #[Layout('components.layouts.app.header')]
                         <i class="ph-fill ph-footprints"></i>
                     </button>
                 </flux:modal.trigger>
-
                 <a
                     href="{{ route('riwayat') }}"
                     wire:navigate
@@ -222,28 +250,161 @@ new #[Layout('components.layouts.app.header')]
 
             {{-- Rekap Mingguan --}}
             <div class="rounded-2xl bg-white p-5 shadow-sm border border-gray-100">
-                <h3 class="text-lg font-semibold text-gray-800 mb-2">Lihat Rekap Mingguanmu</h3>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">Lihat Rekap Mingguan Anda</h3>
                 <p class="text-sm text-gray-600 mb-4">
-                    Pantau progres langkah dan dampak hijau yang sudah kamu ciptakan minggu ini!
+                    Pantau progres langkah dan dampak hijau yang sudah anda ciptakan minggu ini!
                 </p>
 
                 {{-- Chart --}}
                 <div class="w-full mb-4" style="height: 160px;" wire:ignore>
                     <canvas id="dashboardChart"></canvas>
                 </div>
+            </div>
+        </div>
 
-                <a
-                    href="{{ route('riwayat') }}"
-                    wire:navigate
-                    class="w-full bg-gray-100 py-2 rounded-xl text-gray-700 font-medium hover:bg-gray-200 transition flex items-center justify-center gap-2">
-                    <i class="ph-fill ph-clock-counter-clockwise"></i>
-                    Lihat Riwayat Laporanmu
-                </a>
+        {{-- Grid Bawah: Leaderboard --}}
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {{-- LEFT CARD: User Ranking --}}
+            <div class="bg-white rounded-2xl shadow-lg p-6">
+                <div class="flex flex-col items-center">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
+                        <div class="flex flex-col items-center justify-center">
+                            <div class="bg-white p-1.5 rounded-xl border-[2px] border-[#ededed] mb-4 flex items-center justify-center">
+                                <div class="bg-[#c1fdc6] border border-[#ededed] rounded-lg w-12 h-12 flex items-center justify-center">
+                                    <i class="ph-fill ph-trophy text-[#004946] text-3xl"></i>
+                                </div>
+                            </div>
+
+                            @if($user->profile_photo)
+                                <img src="{{ Storage::disk('s3')->url($user->profile_photo) }}" class="w-20 h-20 rounded-lg mb-3 object-cover">
+                            @else
+                                <div class="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-2xl font-bold mb-3">
+                                    {{ $user->initials() }}
+                                </div>
+                            @endif
+
+                            <h2 class="text-xl font-semibold text-center">{{ Str::limit($user->name, 25) }}</h2>
+                            <span class="mt-2 px-4 py-1 border border-[#004946] bg-[#f1fffa] rounded-lg text-gray-700 text-sm">
+                                Peringkat #{{ $userRank }}
+                            </span>
+                        </div>
+                        <div class="flex flex-col gap-3 justify-center mt-6 sm:mt-0">
+                            @if($userAbove)
+                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                                    <div class="flex items-center gap-3">
+                                        @if($userAbove->user->profile_photo)
+                                            <img src="{{ Storage::disk('s3')->url($userAbove->user->profile_photo) }}" class="w-10 h-10 rounded-full object-cover">
+                                        @else
+                                            <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold">
+                                                {{ $userAbove->user->initials() }}
+                                            </div>
+                                        @endif
+                                        <div>
+                                            <p class="font-medium text-sm">{{ Str::limit($userAbove->user->name, 15) }}</p>
+                                            <span class="px-2 py-0.5 border border-gray-300 rounded-full text-xs">
+                                                {{ number_format($userAbove->total_langkah, 0, ',', '.') }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <p class="text-green-700 font-semibold text-xl">#{{ $userRank - 1 }}</p>
+                                </div>
+                            @endif
+
+                            @if($userBelow)
+                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                                    <div class="flex items-center gap-3">
+                                        @if($userBelow->user->profile_photo)
+                                            <img src="{{ Storage::disk('s3')->url($userBelow->user->profile_photo) }}" class="w-10 h-10 rounded-full object-cover">
+                                        @else
+                                            <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold">
+                                                {{ $userBelow->user->initials() }}
+                                            </div>
+                                        @endif
+                                        <div>
+                                            <p class="font-medium text-sm">{{ Str::limit($userBelow->user->name, 15) }}</p>
+                                            <span class="px-2 py-0.5 border border-gray-300 rounded-full text-xs">
+                                                {{ number_format($userBelow->total_langkah, 0, ',', '.') }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <p class="text-green-700 font-semibold text-xl">#{{ $userRank + 1 }}</p>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6 w-full">
+                        <div class="flex items-center gap-3 p-4 border-[2px] border-gray-50 rounded-xl">
+                            <div class="bg-white p-1.5 rounded-xl border-[2px] border-[#ededed] flex items-center justify-center">
+                                <div class="bg-[#c1fdc6] border border-[#ededed] rounded-lg w-8 h-8 flex items-center justify-center">
+                                    <i class="ph-fill ph-fire text-[#004946] text-2xl"></i>
+                                </div>
+                            </div>
+                            <p class="font-medium text-sm">{{ $stats->current_streak }} hari berturut-turut</p>
+                        </div>
+
+                        <div class="flex items-center gap-3 p-4 border-[2px] border-gray-50 rounded-xl">
+                            <div class="bg-white p-1.5 rounded-xl border-[2px] border-[#ededed] flex items-center justify-center">
+                                <div class="bg-[#c1fdc6] border border-[#ededed] rounded-lg w-8 h-8 flex items-center justify-center">
+                                    <i class="ph-fill ph-globe-hemisphere-east text-[#004946] text-2xl"></i>
+                                </div>
+                            </div>
+                            <p class="font-medium text-sm">{{ number_format($stats->total_co2e_kg, 2, ',', '.') }} kg CO₂e dihindari</p>
+                        </div>
+
+                        <div class="flex items-center gap-3 p-4 border-[2px] border-gray-50 rounded-xl">
+                            <div class="bg-white p-1.5 rounded-xl border-[2px] border-[#ededed] flex items-center justify-center">
+                                <div class="bg-[#c1fdc6] border border-[#ededed] rounded-lg w-8 h-8 flex items-center justify-center">
+                                    <i class="ph-fill ph-footprints text-[#004946] text-2xl"></i>
+                                </div>
+                            </div>
+                            <p class="font-medium text-sm">{{ number_format($stats->total_langkah, 0, ',', '.') }} langkah</p>
+                        </div>
+
+                        <div class="flex items-center gap-3 p-4 border-[2px] border-gray-50 rounded-xl">
+                            <div class="bg-white p-1.5 rounded-xl border-[2px] border-[#ededed] flex items-center justify-center">
+                                <div class="bg-[#c1fdc6] border border-[#ededed] rounded-lg w-8 h-8 flex items-center justify-center">
+                                    <i class="ph-fill ph-tree-evergreen text-[#004946] text-2xl"></i>
+                                </div>
+                            </div>
+                            <p class="font-medium text-sm">{{ number_format($stats->total_pohon, 0, ',', '.') }} pohon</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- RIGHT CARD: TOP 10 --}}
+            <div class="bg-white rounded-2xl shadow-lg p-6">
+                <h2 class="text-2xl font-semibold mb-4">10 Permata Banker Teratas</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-gray-700">
+                        <thead>
+                            <tr class="border-b text-sm text-gray-500">
+                                <th class="py-2">Peringkat</th>
+                                <th>Nama</th>
+                                <th>Total Langkah</th>
+                                <th>CO₂e</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-sm">
+                            @foreach($leaderboard as $index => $leader)
+                                <tr class="border-b">
+                                    <td class="py-2">#{{ $index + 1 }}</td>
+                                    <td>{{ Str::limit($leader->user->name, 20) }}</td>
+                                    <td>{{ number_format($leader->total_langkah, 0, ',', '.') }}</td>
+                                    <td>{{ number_format($leader->total_co2e_kg, 1, ',', '.') }} kg</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 
     <livewire:employee.report-upload-component />
+
+    <x-platform-footer />
 
     <script>
         document.addEventListener('livewire:initialized', () => {

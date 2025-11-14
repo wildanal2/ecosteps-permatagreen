@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\FastApiStatus;
 use App\Enums\StatusVerifikasi;
+use App\Enums\VerifiedBy;
 use App\Enums\WalkAppSupport;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -19,6 +20,9 @@ class OcrProcessLog extends Model
         'ocr_text_result',
         'status_verifikasi',
         'received_at',
+        'img_url',
+        'verified_id',
+        'verified_by',
     ];
 
     protected $casts = [
@@ -26,6 +30,7 @@ class OcrProcessLog extends Model
         'status_verifikasi' => StatusVerifikasi::class,
         'detect_aplication_id' => WalkAppSupport::class,
         'received_at' => 'datetime',
+        'verified_id' => VerifiedBy::class,
     ];
 
     public function dailyReport(): BelongsTo

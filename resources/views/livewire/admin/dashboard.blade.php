@@ -3,7 +3,7 @@
 use Livewire\Volt\Component;
 use Livewire\Attributes\{Layout, Title};
 use App\Models\{User, DailyReport, UserStatistic};
-use App\Enums\StatusVerifikasi;
+use App\Enums\{StatusVerifikasi, Directorate};
 use Illuminate\Support\Facades\DB;
 
 new #[Layout('components.layouts.app')]
@@ -58,125 +58,208 @@ new #[Layout('components.layouts.app')]
 
 ?>
 
-<div class="p-8 max-w-[1400px] mx-auto">
-    <!-- Header Title -->
-    <h1 class="text-2xl font-semibold mb-2">Permata Green Steps - Dashboard Admin</h1>
-    <p class="text-gray-600 mb-6">
-        Pantau progres seluruh peserta dalam membangun kebiasaan hijau melalui langkah-langkah kecil yang berdampak besar.
-    </p>
-
-    <!-- Metric Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div class="bg-white rounded-xl shadow p-6">
-            <p class="text-gray-600">Total Peserta</p>
-            <h2 class="text-3xl font-bold">{{ number_format($totalUsers) }} peserta</h2>
-        </div>
-
-        <div class="bg-white rounded-xl shadow p-6">
-            <p class="text-gray-600">Total CO₂e</p>
-            <h2 class="text-3xl font-bold">{{ number_format($totalCO2, 1) }} kg CO₂e</h2>
-        </div>
-
-        <div class="bg-white rounded-xl shadow p-6">
-            <p class="text-gray-600">Total Langkah</p>
-            <h2 class="text-3xl font-bold">{{ number_format($totalSteps) }} langkah</h2>
-        </div>
-
-        <div class="bg-white rounded-xl shadow p-6">
-            <p class="text-gray-600">Konversi Pohon</p>
-            <h2 class="text-3xl font-bold">{{ number_format($totalTrees) }} pohon</h2>
-        </div>
+<div>
+    <div class="py-5 mb-5">
+        <flux:heading size="xl">Dashboard Admin - Permata Green Steps</flux:heading>
+        <flux:text class="mt-2">
+            Pantau progres seluruh peserta dalam membangun kebiasaan hijau melalui langkah-langkah kecil yang berdampak besar.
+        </flux:text>
     </div>
 
-    <!-- Chart Activity -->
-    <div class="bg-white rounded-xl shadow p-6 mb-8">
-        <h2 class="text-xl font-semibold mb-2">Tren Aktivitas & Dampak Lingkungan</h2>
-        <p class="text-gray-600 mb-4">Lihat bagaimana langkah dan pengurangan emisi berkembang dari waktu ke waktu.</p>
-        <div style="height: 300px;" wire:ignore>
-            <canvas id="activityChart"></canvas>
-        </div>
-    </div>
+    <div class="max-w-7xl mx-auto space-y-6">
+        <!-- Metric Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="bg-white dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 rounded-lg shadow p-6">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Total Peserta</p>
+                        <h2 class="text-3xl font-bold text-zinc-900 dark:text-zinc-100 mt-2">{{ number_format($totalUsers) }}</h2>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">peserta</p>
+                    </div>
+                    <div class="bg-white p-1.5 rounded-xl border-[2px] border-[#ededed] flex items-center justify-center">
+                        <div class="bg-[#c1fdc6] border border-[#ededed] rounded-lg w-8 h-8 flex items-center justify-center">
+                            <i class="ph-fill ph-users text-[#004946] text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-    <!-- Heatmap + Kinerja -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <!-- Heatmap Cabang -->
-        <div class="bg-white rounded-xl shadow p-6">
-            <h2 class="text-xl font-semibold mb-4">Heatmap Cabang</h2>
-            <div class="grid grid-cols-3 gap-2 text-white text-center font-medium">
-                @php
-                    $branches = $directoratePerformance->take(6);
-                    $colors = ['bg-green-900', 'bg-green-700', 'bg-green-800', 'bg-green-500', 'bg-green-600', 'bg-green-500'];
-                @endphp
-                @foreach($branches as $index => $branch)
-                    <div class="{{ $colors[$index] ?? 'bg-green-600' }} p-4 rounded">{{ $branch->directorate }}</div>
-                @endforeach
+            <div class="bg-white dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 rounded-lg shadow p-6">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Total CO₂e Dihindari</p>
+                        <h2 class="text-3xl font-bold text-zinc-900 dark:text-zinc-100 mt-2">{{ number_format($totalCO2, 1) }}</h2>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">kg CO₂e</p>
+                    </div>
+                    <div class="bg-white p-1.5 rounded-xl border-[2px] border-[#ededed] flex items-center justify-center">
+                        <div class="bg-[#c1fdc6] border border-[#ededed] rounded-lg w-8 h-8 flex items-center justify-center">
+                            <i class="ph-fill ph-globe-hemisphere-east text-[#004946] text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 rounded-lg shadow p-6">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Total Langkah</p>
+                        <h2 class="text-3xl font-bold text-zinc-900 dark:text-zinc-100 mt-2">{{ number_format($totalSteps) }}</h2>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">langkah</p>
+                    </div>
+                    <div class="bg-white p-1.5 rounded-xl border-[2px] border-[#ededed] flex items-center justify-center">
+                        <div class="bg-[#c1fdc6] border border-[#ededed] rounded-lg w-8 h-8 flex items-center justify-center">
+                            <i class="ph-fill ph-footprints text-[#004946] text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 rounded-lg shadow p-6">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Estimasi Pohon</p>
+                        <h2 class="text-3xl font-bold text-zinc-900 dark:text-zinc-100 mt-2">{{ number_format($totalTrees) }}</h2>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">pohon</p>
+                    </div>
+                    <div class="bg-white p-1.5 rounded-xl border-[2px] border-[#ededed] flex items-center justify-center">
+                        <div class="bg-[#c1fdc6] border border-[#ededed] rounded-lg w-8 h-8 flex items-center justify-center">
+                            <i class="ph-fill ph-tree-evergreen text-[#004946] text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Tabel Kinerja -->
-        <div class="bg-white rounded-xl shadow p-6 overflow-x-auto">
-            <h2 class="text-xl font-semibold mb-4">Kinerja Tiap Direktorat</h2>
-            <table class="w-full text-left">
-                <thead>
-                    <tr class="border-b">
-                        <th class="py-2">No</th>
-                        <th>Direktorat</th>
-                        <th>Total Langkah</th>
-                        <th>CO₂e Dihindari</th>
-                        <th>Est. Pohon</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($directoratePerformance as $index => $perf)
-                        <tr class="border-b">
-                            <td class="py-2">{{ $index + 1 }}</td>
-                            <td>{{ $perf->directorate }}</td>
-                            <td>{{ number_format($perf->total_steps) }}</td>
-                            <td>{{ number_format($perf->co2e, 1) }} kg</td>
-                            <td>{{ number_format($perf->trees) }} pohon</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+        <!-- Chart Activity -->
+        <div class="bg-white dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 rounded-lg shadow p-6">
+            <div class="mb-4">
+                <flux:heading size="lg">Tren Aktivitas & Dampak Lingkungan</flux:heading>
+                <flux:subheading>Lihat bagaimana langkah dan pengurangan emisi berkembang dari waktu ke waktu.</flux:subheading>
+            </div>
+            <div style="height: 300px;" wire:ignore>
+                <canvas id="activityChart"></canvas>
+            </div>
         </div>
-    </div>
 
-    <!-- Top 10 Table -->
-    <div class="bg-white rounded-xl shadow p-6 overflow-x-auto mb-10">
-        <h2 class="text-xl font-semibold mb-4">Top 10 Individu, Langkah Teraktif Minggu Ini</h2>
-        <table class="w-full text-left">
-            <thead>
-                <tr class="border-b">
-                    <th class="py-2">Peringkat</th>
-                    <th>Nama</th>
-                    <th>Direktorat</th>
-                    <th>CO₂e Dihindari</th>
-                    <th>Est. Pohon</th>
-                    <th>Jumlah Streak</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($topIndividuals as $index => $individual)
-                    <tr class="border-b">
-                        <td class="py-2">{{ $index + 1 }}</td>
-                        <td>{{ $individual->name }}</td>
-                        <td>{{ $individual->directorate ?? '-' }}</td>
-                        <td>{{ number_format($individual->total_co2e_kg, 1) }} kg</td>
-                        <td>{{ number_format($individual->trees) }} pohon</td>
-                        <td>{{ $individual->current_streak }} hari</td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
+        <!-- Heatmap + Kinerja -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Heatmap Direktorat -->
+            <div class="bg-white dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 rounded-lg shadow p-6">
+                <div class="mb-4">
+                    <flux:heading size="lg">Heatmap Direktorat</flux:heading>
+                    <flux:subheading>Visualisasi performa direktorat teratas.</flux:subheading>
+                </div>
+                <div class="grid grid-cols-3 gap-2 text-white text-center font-medium text-sm">
+                    @php
+                        $branches = $directoratePerformance->take(6);
+                        $colors = ['bg-green-900', 'bg-green-700', 'bg-green-800', 'bg-green-500', 'bg-green-600', 'bg-green-500'];
+                    @endphp
+                    @foreach($branches as $index => $branch)
+                        <div class="{{ $colors[$index] ?? 'bg-green-600' }} p-4 rounded-lg">{{ $branch->directorate?->label() ?? '-' }}</div>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Tabel Kinerja -->
+            <div class="bg-white dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 rounded-lg shadow p-6">
+                <div class="mb-4">
+                    <flux:heading size="lg">Kinerja Tiap Direktorat</flux:heading>
+                    <flux:subheading>Peringkat direktorat berdasarkan total langkah.</flux:subheading>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-700">
+                        <thead class="bg-zinc-50 dark:bg-zinc-900">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">No</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Direktorat</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Total Langkah</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">CO₂e</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Pohon</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-zinc-800 divide-y divide-zinc-200 dark:divide-zinc-700">
+                            @foreach($directoratePerformance as $index => $perf)
+                                <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-700">
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ $index + 1 }}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ $perf->directorate?->label() ?? '-' }}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($perf->total_steps) }}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($perf->co2e, 1) }} kg</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($perf->trees) }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top 10 Table -->
+        <div class="bg-white dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 rounded-lg shadow p-6">
+            <div class="mb-4">
+                <flux:heading size="lg">Top 10 Individu Teraktif</flux:heading>
+                <flux:subheading>Peserta dengan total langkah tertinggi.</flux:subheading>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-700">
+                    <thead class="bg-zinc-50 dark:bg-zinc-900">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Peringkat</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Nama</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Direktorat</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Total Langkah</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">CO₂e Dihindari</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Est. Pohon</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Streak</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white dark:bg-zinc-800 divide-y divide-zinc-200 dark:divide-zinc-700">
+                        @foreach($topIndividuals as $index => $individual)
+                            <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-700">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-zinc-900 dark:text-zinc-100">
+                                    @if($index + 1 == 1)
+                                        🥇 {{ $index + 1 }}
+                                    @elseif($index + 1 == 2)
+                                        🥈 {{ $index + 1 }}
+                                    @elseif($index + 1 == 3)
+                                        🥉 {{ $index + 1 }}
+                                    @else
+                                        {{ $index + 1 }}
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ $individual->name }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ $individual->directorate?->label() ?? '-' }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($individual->total_langkah) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($individual->total_co2e_kg, 2) }} kg</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($individual->trees) }} pohon</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ $individual->current_streak }} hari</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
 
+@once
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+@endonce
+
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const ctx = document.getElementById('activityChart');
-    if (ctx) {
-        new Chart(ctx.getContext('2d'), {
+(function() {
+    if (!window.activityChartInstance) {
+        window.activityChartInstance = null;
+    }
+
+    function initActivityChart() {
+        const ctx = document.getElementById('activityChart');
+        if (ctx) {
+            // Destroy existing chart instance
+            if (window.activityChartInstance) {
+                window.activityChartInstance.destroy();
+            }
+
+            window.activityChartInstance = new Chart(ctx.getContext('2d'), {
             type: 'bar',
             data: {
                 labels: @js($dailyActivity->map(fn($d) => \Carbon\Carbon::parse($d->date)->format('d M'))),
@@ -184,7 +267,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     {
                         label: 'Jumlah Langkah',
                         data: @js($dailyActivity->pluck('total_steps')),
-                        backgroundColor: 'rgba(56, 189, 248, 0.6)',
+                        backgroundColor: 'rgba(47, 43, 255, 1.0)',
                         yAxisID: 'y',
                     },
                     {
@@ -265,6 +348,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         });
+        }
     }
-});
+
+    // Initialize chart
+    initActivityChart();
+
+    // Re-initialize after Livewire navigation
+    document.addEventListener('livewire:navigated', initActivityChart);
+})();
 </script>

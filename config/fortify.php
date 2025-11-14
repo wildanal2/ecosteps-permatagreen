@@ -143,10 +143,10 @@ return [
     |
     */
 
-    'features' => [
+    'features' => array_filter([
         // Features::registration(), // Disabled - using custom Volt route
         Features::resetPasswords(),
-        Features::emailVerification(),
+        env('REQUIRE_EMAIL_VERIFICATION', false) ? Features::emailVerification() : null,
         Features::updateProfileInformation(),
         Features::updatePasswords(),
         Features::twoFactorAuthentication([
@@ -154,6 +154,6 @@ return [
             'confirmPassword' => true,
             // 'window' => 0,
         ]),
-    ],
+    ]),
 
 ];
