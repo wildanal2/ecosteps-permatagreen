@@ -53,17 +53,40 @@ class ReportUploadComponent extends Component
             $this->uploadProgress = 30;
 
             // Upload to S3
+            Log::info('Starting file upload to S3', [
+                'user_id' => $user->id,
+                'filename' => $filename,
+                'path' => $path,
+                'file_size' => $this->photo->getSize()
+            ]);
+
             $result = Storage::disk('s3')->put($path, file_get_contents($this->photo->getRealPath()), 'public');
 
             if (!$result) {
-                throw new \Exception('Gagal mengupload file ke S3');
+                Log::error('Failed to upload file to S3', [
+                    'user_id' => $user->id,
+                    'path' => $path,
+                    'filename' => $filename
+                ]);
+                throw new \Exception('Gagal melakukan proses upload ke server, coba beberapa saat lagi');
             }
+
+            Log::info('File uploaded to S3 successfully', [
+                'user_id' => $user->id,
+                'path' => $path,
+                's3_url' => rtrim(config('filesystems.disks.s3.url'), '/') . '/' . $path
+            ]);
 
             $this->uploadProgress = 60;
 
             $s3Url = rtrim(config('filesystems.disks.s3.url'), '/') . '/' . $path;
 
             // Create or update DailyReport
+            Log::info('Creating/updating daily report', [
+                'user_id' => $user->id,
+                's3_url' => $s3Url
+            ]);
+
             $report = DailyReport::where('user_id', $user->id)
                 ->whereDate('tanggal_laporan', today())
                 ->first();
@@ -74,6 +97,7 @@ class ReportUploadComponent extends Component
                     'status_verifikasi' => StatusVerifikasi::PENDING,
                 ]);
                 $report->increment('count_document');
+                Log::info('Daily report updated', ['report_id' => $report->id]);
             } else {
                 $report = DailyReport::create([
                     'user_id' => $user->id,
@@ -86,6 +110,7 @@ class ReportUploadComponent extends Component
                     'pohon' => 0,
                     'count_document' => 1,
                 ]);
+                Log::info('Daily report created', ['report_id' => $report->id]);
             }
 
             $this->uploadProgress = 80;
@@ -137,6 +162,12 @@ class ReportUploadComponent extends Component
             flash()->success('Laporan berhasil diunggah!');
             $this->reset(['photo', 'isUploading', 'uploadProgress', 'uploadedUrl', 'showSuccess']);
         } catch (\Exception $e) {
+            Log::error('Report upload failed', [
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             $this->addError('photo', $e->getMessage());
             $this->isUploading = false;
             $this->uploadProgress = 0;
