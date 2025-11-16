@@ -60,7 +60,18 @@ class ReportUploadComponent extends Component
                 'file_size' => $this->photo->getSize()
             ]);
 
-            $result = Storage::disk('s3')->put($path, file_get_contents($this->photo->getRealPath()), 'public');
+            try {
+                $result = Storage::disk('s3')->put($path, file_get_contents($this->photo->getRealPath()), 'public');
+            } catch (\Exception $e) {
+                Log::error('S3 Upload Exception', [
+                    'user_id' => $user->id,
+                    'path' => $path,
+                    'filename' => $filename,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                throw new \Exception('Gagal melakukan proses upload ke server, coba beberapa saat lagi');
+            }
 
             if (!$result) {
                 Log::error('Failed to upload file to S3', [
