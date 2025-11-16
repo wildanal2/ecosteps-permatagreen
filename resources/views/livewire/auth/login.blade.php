@@ -39,7 +39,7 @@ new #[Layout('components.layouts.auth')]
         RateLimiter::clear($throttleKey);
 
         // Cek apakah email sudah diverifikasi
-        if (!Auth::user()->hasVerifiedEmail()) {
+        if (config('app.email_verification_required', false) && !Auth::user()->hasVerifiedEmail()) {
             $email = Auth::user()->email;
             Auth::logout();
             session()->put('unverified_email', $email);
