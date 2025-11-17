@@ -61,7 +61,12 @@ class ReportUploadComponent extends Component
             ]);
 
             try {
-                $result = Storage::disk('s3')->put($path, file_get_contents($this->photo->getRealPath()), 'public');
+                $result = Storage::disk('s3')->putFileAs(
+                    dirname($path),
+                    $this->photo,
+                    basename($path),
+                    'public'
+                );
             } catch (\Exception $e) {
                 Log::error('S3 Upload Exception', [
                     'user_id' => $user->id,
