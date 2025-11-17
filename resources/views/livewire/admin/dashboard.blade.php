@@ -184,7 +184,7 @@ new #[Layout('components.layouts.app')]
                                     <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ $perf->directorate?->label() ?? '-' }}</td>
                                     <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($perf->total_steps) }}</td>
                                     <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($perf->co2e, 1) }} kg</td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($perf->trees) }}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($perf->trees, 2) }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -230,7 +230,7 @@ new #[Layout('components.layouts.app')]
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ $individual->directorate?->label() ?? '-' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($individual->total_langkah) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($individual->total_co2e_kg, 2) }} kg</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($individual->trees) }} pohon</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($individual->trees, 2) }} pohon</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ $individual->current_streak }} hari</td>
                             </tr>
                         @endforeach
