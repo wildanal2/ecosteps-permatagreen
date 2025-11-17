@@ -78,7 +78,7 @@ new #[Layout('components.layouts.auth')]
 <div class="w-full p-8 max-w-md lg:max-w-full bg-white lg:bg-gray-50 rounded-2xl shadow-sm lg:shadow-none">
     {{-- Logo --}}
     <div class="flex justify-center lg:justify-start mb-6">
-        <img src="{{ asset('assets/images/permata-logo.png') }}" alt="Permata Bank" class="h-8 lg:h-12">
+        <img src="{{ asset('assets/images/logo.png') }}" alt="Permata Bank" class="h-18 mb-2">
     </div>
 
     {{-- Header --}}

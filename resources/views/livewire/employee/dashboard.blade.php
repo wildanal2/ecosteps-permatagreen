@@ -466,7 +466,12 @@ function initDashboardChart(labels, steps) {
             scales: {
                 y: {
                     beginAtZero: true,
-                    ticks: { color: isDark ? '#9ca3af' : '#6b7280' },
+                    ticks: { 
+                        color: isDark ? '#9ca3af' : '#6b7280',
+                        callback: function(value) {
+                            return value.toLocaleString('id-ID');
+                        }
+                    },
                     grid: { color: isDark ? 'rgba(75, 85, 99, 0.3)' : 'rgba(229, 231, 235, 0.8)' }
                 },
                 x: {

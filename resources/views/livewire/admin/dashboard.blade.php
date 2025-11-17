@@ -3,7 +3,7 @@
 use Livewire\Volt\Component;
 use Livewire\Attributes\{Layout, Title};
 use App\Models\{User, DailyReport, UserStatistic};
-use App\Enums\{StatusVerifikasi, Directorate};
+use App\Enums\{StatusVerifikasi, Directorate, EmissionFactor, TreeCo2Absorption};
 use Illuminate\Support\Facades\DB;
 
 new #[Layout('components.layouts.app')]
@@ -16,11 +16,11 @@ new #[Layout('components.layouts.app')]
             'totalUsers' => User::where('user_level', 1)->count(),
             'totalSteps' => DailyReport::sum('langkah'),
             'totalCO2' => UserStatistic::sum('total_co2e_kg'),
-            'totalTrees' => round(UserStatistic::sum('total_co2e_kg') * 77), // estimasi konversi pohon
+            'totalTrees' => UserStatistic::sum('total_co2e_kg') / TreeCo2Absorption::default()->getValue(),
             'dailyActivity' => DailyReport::select(
                     DB::raw('DATE(tanggal_laporan) as date'),
                     DB::raw('SUM(langkah) as total_steps'),
-                    DB::raw('SUM(langkah) * 0.0004 as co2e')
+                    DB::raw('ROUND(SUM(langkah) * 0.75 / 1000 * ' . EmissionFactor::default()->getValue() . ', 2) as co2e')
                 )
                 ->where('tanggal_laporan', '>=', now()->subDays(7))
                 ->groupBy(DB::raw('DATE(tanggal_laporan)'))
@@ -30,7 +30,7 @@ new #[Layout('components.layouts.app')]
                     'users.directorate',
                     DB::raw('SUM(user_statistics.total_langkah) as total_steps'),
                     DB::raw('SUM(user_statistics.total_co2e_kg) as co2e'),
-                    DB::raw('CAST(SUM(user_statistics.total_co2e_kg) * 77 AS INTEGER) as trees')
+                    DB::raw('ROUND(SUM(user_statistics.total_co2e_kg) / ' . TreeCo2Absorption::default()->getValue() . ', 2) as trees')
                 )
                 ->join('user_statistics', 'users.id', '=', 'user_statistics.user_id')
                 ->where('users.user_level', 1)
@@ -45,7 +45,7 @@ new #[Layout('components.layouts.app')]
                     'user_statistics.total_co2e_kg',
                     'user_statistics.total_langkah',
                     'user_statistics.current_streak',
-                    DB::raw('CAST(user_statistics.total_co2e_kg * 77 AS INTEGER) as trees')
+                    DB::raw('ROUND(user_statistics.total_co2e_kg / ' . TreeCo2Absorption::default()->getValue() . ', 2) as trees')
                 )
                 ->join('user_statistics', 'users.id', '=', 'user_statistics.user_id')
                 ->where('users.user_level', 1)
@@ -118,7 +118,7 @@ new #[Layout('components.layouts.app')]
                 <div class="flex items-start justify-between">
                     <div class="flex-1">
                         <p class="text-sm text-zinc-500 dark:text-zinc-400">Estimasi Pohon</p>
-                        <h2 class="text-3xl font-bold text-zinc-900 dark:text-zinc-100 mt-2">{{ number_format($totalTrees) }}</h2>
+                        <h2 class="text-3xl font-bold text-zinc-900 dark:text-zinc-100 mt-2">{{ number_format($totalTrees, 2) }}</h2>
                         <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">pohon</p>
                     </div>
                     <div class="bg-white p-1.5 rounded-xl border-[2px] border-[#ededed] flex items-center justify-center">
@@ -184,7 +184,7 @@ new #[Layout('components.layouts.app')]
                                     <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ $perf->directorate?->label() ?? '-' }}</td>
                                     <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($perf->total_steps) }}</td>
                                     <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($perf->co2e, 1) }} kg</td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($perf->trees) }}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($perf->trees, 2) }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -230,7 +230,7 @@ new #[Layout('components.layouts.app')]
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ $individual->directorate?->label() ?? '-' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($individual->total_langkah) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($individual->total_co2e_kg, 2) }} kg</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($individual->trees) }} pohon</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($individual->trees, 2) }} pohon</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ $individual->current_streak }} hari</td>
                             </tr>
                         @endforeach
@@ -309,6 +309,13 @@ new #[Layout('components.layouts.app')]
                                     }
                                 }
                                 return label;
+                            },
+                            afterLabel: function(context) {
+                                if (context.datasetIndex === 1) {
+                                    const trees = (context.parsed.y / {{ TreeCo2Absorption::default()->getValue() }}).toFixed(2);
+                                    return 'Setara: ' + trees + ' pohon';
+                                }
+                                return null;
                             }
                         }
                     }
