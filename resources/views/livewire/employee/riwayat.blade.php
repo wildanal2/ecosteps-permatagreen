@@ -183,7 +183,7 @@ new #[Layout('components.layouts.app.header')]
                             </span>
                         </div>
 
-                        <div class="grid grid-cols-4 text-center text-sm text-gray-800 dark:text-gray-200 mb-4">
+                        <div class="grid grid-cols-3 text-center text-sm text-gray-800 dark:text-gray-200 mb-4">
                             <div>
                                 <p class="font-semibold">{{ number_format($report->langkah) }}</p>
                                 <p class="text-gray-500 dark:text-gray-400">Langkah</p>
@@ -192,10 +192,10 @@ new #[Layout('components.layouts.app.header')]
                                 <p class="font-semibold">{{ number_format($report->co2e_reduction_kg, 2) }} kg</p>
                                 <p class="text-gray-500 dark:text-gray-400">CO₂e</p>
                             </div>
-                            <div>
+                            <!-- <div>
                                 <p class="font-semibold">{{ number_format($report->poin) }} pts</p>
                                 <p class="text-gray-500 dark:text-gray-400">Poin</p>
-                            </div>
+                            </div> -->
                             <div>
                                 <p class="font-semibold">{{ number_format($report->pohon, 1) }}</p>
                                 <p class="text-gray-500 dark:text-gray-400">Pohon</p>

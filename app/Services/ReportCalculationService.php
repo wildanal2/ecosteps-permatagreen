@@ -3,16 +3,22 @@
 namespace App\Services;
 
 use App\Models\{DailyReport, UserStatistic};
-use App\Enums\StatusVerifikasi;
+use App\Enums\{StatusVerifikasi, EmissionFactor, TreeCo2Absorption};
 
 class ReportCalculationService
 {
     public function recalculate(int $reportId, int $steps): void
     {
         $report = DailyReport::findOrFail($reportId);
+
+        // 1. Konversi langkah ke jarak (km)
+        $jarak = ($steps * 0.75) / 1000;
         
-        $co2e = round($steps * 0.000064, 2);
-        $pohon = floor($steps / 10000);
+        // 2. Perhitungan Emisi (kg CO2e)
+        $co2e = round($jarak * EmissionFactor::default()->getValue(), 2);
+        
+        // 3. Konversi Pohon
+        $pohon = round($co2e / TreeCo2Absorption::default()->getValue(), 2);
 
         $report->update([
             'langkah' => $steps,
