@@ -1,4 +1,4 @@
-<flux:modal name="upload-harian" class="max-w-md lg:w-lg">
+<flux:modal name="upload-harian" class="max-w-md lg:w-lg" :dismissible="false">
     <div class="space-y-6">
         <div>
             <div class="text-center">
@@ -62,7 +62,7 @@
                     </div>
                 @else
                     <div class="w-full flex flex-col items-center cursor-pointer">
-                        <i class="ph ph-cloud-arrow-up px-2 py-1 text-2xl bg-white rounded mb-3"></i>
+                        <i class="ph ph-cloud-arrow-up px-2 py-1 text-2xl bg-white dark:bg-zinc-800 dark:text-gray-100 rounded mb-3"></i>
                         <span class="font-medium text-gray-700 mb-2">Pilih file atau drag & drop</span>
                         <input
                             x-ref="fileInput"

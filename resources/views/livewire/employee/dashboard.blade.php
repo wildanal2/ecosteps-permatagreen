@@ -166,10 +166,10 @@ new #[Layout('components.layouts.app.header')]
     <div class="flex flex-col gap-6 p-6">
         {{-- Header --}}
         <div>
-            <h2 class="text-xl font-semibold text-gray-800">
-                Selamat datang di Walk for Elephant, <span class="text-gray-900 font-bold">{{ $user->name }}</span>
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-zinc-100">
+                Selamat datang di Walk for Elephant, <span class="text-gray-900 dark:text-zinc-100 font-bold">{{ $user->name }}</span>
             </h2>
-            <p class="text-sm text-gray-600 mb-4">
+            <p class="text-sm text-gray-600 dark:text-zinc-400 mb-4">
                 Lihat progres langkah anda hari ini dan sejauh mana anda berkontribusi dalam gerakan hijau.
             </p>
 
@@ -208,28 +208,34 @@ new #[Layout('components.layouts.app.header')]
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
             {{-- Progres Harian --}}
-            <div class="rounded-2xl bg-white p-5 shadow-sm border border-gray-100">
+            <div class="rounded-2xl bg-white dark:bg-zinc-800 p-5 shadow-sm border border-gray-100 dark:border-zinc-700">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold text-gray-800">Progres Harian</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-zinc-100">Progres Harian</h3>
                     @if($todaySteps == 0)
-                        <span class="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">Belum Mulai</span>
+                        <span class="text-xs bg-gray-100 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300 px-2 py-1 rounded-full">Belum Mulai</span>
                     @elseif($todaySteps >= $targetSteps)
-                        <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Target Tercapai</span>
+                        <span class="text-xs bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 px-2 py-1 rounded-full">Target Tercapai</span>
                     @else
-                        <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Berjalan Sebagian</span>
+                        <span class="text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full">Berjalan Sebagian</span>
                     @endif
                 </div>
-                <p class="text-sm text-gray-600 mb-4">
+                <p class="text-sm text-gray-600 dark:text-zinc-400 mb-4">
                     Setiap langkah yang anda ambil bukan hanya menambah poin, tapi juga mengurangi jejak karbon
                 </p>
 
                 {{-- Progress --}}
-                <div class="relative w-full bg-gray-100 rounded-md h-10 mb-4 overflow-hidden">
+                <div class="relative w-full bg-gray-100 dark:bg-zinc-700 rounded-md h-10 mb-4 overflow-hidden">
                     <div class="absolute h-10 transition-all" style="width: {{ $progressPercent }}%; background: {{ $todaySteps >= $targetSteps ? 'repeating-linear-gradient(90deg, #004646 0px, #004646 8px, transparent 8px, transparent 10px)' : 'repeating-linear-gradient(90deg, #facc15 0px, #facc15 8px, transparent 8px, transparent 10px)' }};"></div>
                     <div class="absolute inset-0 flex items-center justify-center z-10">
-                        <p class="text-xs text-gray-800 font-medium px-1.5 py-0.5 rounded-md" style="backdrop-filter: blur(9px); background: rgba(255,255,255,0.45); box-shadow: 0 2px 14px 0 rgba(0,0,0,0.06); ">
-                            Langkah hari ini <span class="font-bold text-base mx-1">{{ number_format($todaySteps, 0, ',', '.') }}</span>/{{ number_format($targetSteps, 0, ',', '.') }} langkah 🏃
+                        <p class="text-xs text-gray-800 dark:text-zinc-300 font-medium px-1.5 py-0.5 rounded-md
+                                backdrop-blur-md bg-white/45 dark:bg-white/10 shadow-md">
+                            Langkah hari ini
+                            <span class="font-bold text-base mx-1">
+                                {{ number_format($todaySteps, 0, ',', '.') }}
+                            </span>
+                            /{{ number_format($targetSteps, 0, ',', '.') }} langkah 🏃
                         </p>
+
                     </div>
                 </div>
 
@@ -249,9 +255,9 @@ new #[Layout('components.layouts.app.header')]
             </div>
 
             {{-- Rekap Mingguan --}}
-            <div class="rounded-2xl bg-white p-5 shadow-sm border border-gray-100">
-                <h3 class="text-lg font-semibold text-gray-800 mb-2">Lihat Rekap Mingguan Anda</h3>
-                <p class="text-sm text-gray-600 mb-4">
+            <div class="rounded-2xl bg-white dark:bg-zinc-800 p-5 shadow-sm border border-gray-100 dark:border-zinc-700">
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-zinc-100 mb-2">Lihat Rekap Mingguan Anda</h3>
+                <p class="text-sm text-gray-600 dark:text-zinc-400 mb-4">
                     Pantau progres langkah dan dampak hijau yang sudah anda ciptakan minggu ini!
                 </p>
 
@@ -265,7 +271,7 @@ new #[Layout('components.layouts.app.header')]
         {{-- Grid Bawah: Leaderboard --}}
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {{-- LEFT CARD: User Ranking --}}
-            <div class="bg-white rounded-2xl shadow-lg p-6">
+            <div class="bg-white dark:bg-zinc-800 rounded-2xl shadow-lg p-6 border border-gray-100 dark:border-zinc-700">
                 <div class="flex flex-col items-center">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
                         <div class="flex flex-col items-center justify-center">
@@ -284,13 +290,13 @@ new #[Layout('components.layouts.app.header')]
                             @endif
 
                             <h2 class="text-xl font-semibold text-center">{{ Str::limit($user->name, 25) }}</h2>
-                            <span class="mt-2 px-4 py-1 border border-[#004946] bg-[#f1fffa] rounded-lg text-gray-700 text-sm">
+                            <span class="mt-2 px-4 py-1 border border-[#004946] dark:border-green-600 bg-[#f1fffa] dark:bg-green-900/20 rounded-lg text-gray-700 dark:text-green-300 text-sm">
                                 Peringkat #{{ $userRank }}
                             </span>
                         </div>
                         <div class="flex flex-col gap-3 justify-center mt-6 sm:mt-0">
                             @if($userAbove)
-                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-zinc-800 dark:border dark:border-zinc-700 rounded-xl">
                                     <div class="flex items-center gap-3">
                                         @if($userAbove->user->profile_photo)
                                             <img src="{{ Storage::disk('s3')->url($userAbove->user->profile_photo) }}" class="w-10 h-10 rounded-full object-cover">
@@ -311,7 +317,7 @@ new #[Layout('components.layouts.app.header')]
                             @endif
 
                             @if($userBelow)
-                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-zinc-800 dark:border dark:border-zinc-700 rounded-xl">
                                     <div class="flex items-center gap-3">
                                         @if($userBelow->user->profile_photo)
                                             <img src="{{ Storage::disk('s3')->url($userBelow->user->profile_photo) }}" class="w-10 h-10 rounded-full object-cover">
@@ -321,20 +327,20 @@ new #[Layout('components.layouts.app.header')]
                                             </div>
                                         @endif
                                         <div>
-                                            <p class="font-medium text-sm">{{ Str::limit($userBelow->user->name, 15) }}</p>
+                                            <p class="font-medium text-sm text-gray-900 dark:text-zinc-100">{{ Str::limit($userBelow->user->name, 15) }}</p>
                                             <span class="px-2 py-0.5 border border-gray-300 rounded-full text-xs">
                                                 {{ number_format($userBelow->total_langkah, 0, ',', '.') }}
                                             </span>
                                         </div>
                                     </div>
-                                    <p class="text-green-700 font-semibold text-xl">#{{ $userRank + 1 }}</p>
+                                    <p class="text-green-700 dark:text-green-400 font-semibold text-xl">#{{ $userRank + 1 }}</p>
                                 </div>
                             @endif
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6 w-full">
-                        <div class="flex items-center gap-3 p-4 border-[2px] border-gray-50 rounded-xl">
+                        <div class="flex items-center gap-3 p-4 border-[2px] border-gray-50 dark:border dark:border-zinc-700 rounded-xl ">
                             <div class="bg-white p-1.5 rounded-xl border-[2px] border-[#ededed] flex items-center justify-center">
                                 <div class="bg-[#c1fdc6] border border-[#ededed] rounded-lg w-8 h-8 flex items-center justify-center">
                                     <i class="ph-fill ph-fire text-[#004946] text-2xl"></i>
@@ -343,43 +349,43 @@ new #[Layout('components.layouts.app.header')]
                             <p class="font-medium text-sm">{{ $stats->current_streak }} hari berturut-turut</p>
                         </div>
 
-                        <div class="flex items-center gap-3 p-4 border-[2px] border-gray-50 rounded-xl">
+                        <div class="flex items-center gap-3 p-4 border-[2px] border-gray-50 dark:border dark:border-zinc-700 rounded-xl ">
                             <div class="bg-white p-1.5 rounded-xl border-[2px] border-[#ededed] flex items-center justify-center">
                                 <div class="bg-[#c1fdc6] border border-[#ededed] rounded-lg w-8 h-8 flex items-center justify-center">
                                     <i class="ph-fill ph-globe-hemisphere-east text-[#004946] text-2xl"></i>
                                 </div>
                             </div>
-                            <p class="font-medium text-sm">{{ number_format($stats->total_co2e_kg, 2, ',', '.') }} kg CO₂e dihindari</p>
+                            <p class="font-medium text-sm text-gray-900 dark:text-zinc-100">{{ number_format($stats->total_co2e_kg, 2, ',', '.') }} kg CO₂e dihindari</p>
                         </div>
 
-                        <div class="flex items-center gap-3 p-4 border-[2px] border-gray-50 rounded-xl">
+                        <div class="flex items-center gap-3 p-4 border-[2px] border-gray-50 dark:border dark:border-zinc-700 rounded-xl ">
                             <div class="bg-white p-1.5 rounded-xl border-[2px] border-[#ededed] flex items-center justify-center">
                                 <div class="bg-[#c1fdc6] border border-[#ededed] rounded-lg w-8 h-8 flex items-center justify-center">
                                     <i class="ph-fill ph-footprints text-[#004946] text-2xl"></i>
                                 </div>
                             </div>
-                            <p class="font-medium text-sm">{{ number_format($stats->total_langkah, 0, ',', '.') }} langkah</p>
+                            <p class="font-medium text-sm text-gray-900 dark:text-zinc-100">{{ number_format($stats->total_langkah, 0, ',', '.') }} langkah</p>
                         </div>
 
-                        <div class="flex items-center gap-3 p-4 border-[2px] border-gray-50 rounded-xl">
+                        <div class="flex items-center gap-3 p-4 border-[2px] border-gray-50 dark:border dark:border-zinc-700 rounded-xl ">
                             <div class="bg-white p-1.5 rounded-xl border-[2px] border-[#ededed] flex items-center justify-center">
                                 <div class="bg-[#c1fdc6] border border-[#ededed] rounded-lg w-8 h-8 flex items-center justify-center">
                                     <i class="ph-fill ph-tree-evergreen text-[#004946] text-2xl"></i>
                                 </div>
                             </div>
-                            <p class="font-medium text-sm">{{ number_format($stats->total_pohon, 0, ',', '.') }} pohon</p>
+                            <p class="font-medium text-sm text-gray-900 dark:text-zinc-100">{{ number_format($stats->total_pohon, 0, ',', '.') }} pohon</p>
                         </div>
                     </div>
                 </div>
             </div>
 
             {{-- RIGHT CARD: TOP 10 --}}
-            <div class="bg-white rounded-2xl shadow-lg p-6">
-                <h2 class="text-2xl font-semibold mb-4">10 Permata Banker Teratas</h2>
+            <div class="bg-white dark:bg-zinc-800 rounded-2xl shadow-lg p-6 border border-gray-100 dark:border-zinc-700">
+                <h2 class="text-2xl font-semibold mb-4 text-gray-900 dark:text-zinc-100">10 Permata Banker Teratas</h2>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-gray-700">
+                    <table class="w-full text-left text-gray-700 dark:text-zinc-300">
                         <thead>
-                            <tr class="border-b text-sm text-gray-500">
+                            <tr class="border-b text-sm text-gray-500 dark:text-zinc-400">
                                 <th class="py-2">Peringkat</th>
                                 <th>Nama</th>
                                 <th>Total Langkah</th>
@@ -388,7 +394,7 @@ new #[Layout('components.layouts.app.header')]
                         </thead>
                         <tbody class="text-sm">
                             @foreach($leaderboard as $index => $leader)
-                                <tr class="border-b">
+                                <tr class="border-b dark:border-zinc-700">
                                     <td class="py-2">#{{ $index + 1 }}</td>
                                     <td>{{ Str::limit($leader->user->name, 20) }}</td>
                                     <td>{{ number_format($leader->total_langkah, 0, ',', '.') }}</td>
@@ -466,7 +472,7 @@ function initDashboardChart(labels, steps) {
             scales: {
                 y: {
                     beginAtZero: true,
-                    ticks: { 
+                    ticks: {
                         color: isDark ? '#9ca3af' : '#6b7280',
                         callback: function(value) {
                             return value.toLocaleString('id-ID');

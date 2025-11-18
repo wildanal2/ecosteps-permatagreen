@@ -68,9 +68,9 @@ new #[Layout('components.layouts.app')]
             $report->update([
                 'ocr_result' => json_encode(['steps' => (int) ($this->validSteps[$reportId] ?? 0)]),
                 'status_verifikasi' => StatusVerifikasi::DIVERIFIKASI,
-                'verified_by' => VerifiedBy::ADMIN,
+                'verified_by' => auth()->id(),
                 'verified_at' => now(),
-                'verified_id' => auth()->id(),
+                'verified_id' => VerifiedBy::ADMIN,
                 'manual_verification_requested' => false,
                 'manual_verification_requested_at' => null,
             ]);
@@ -176,7 +176,7 @@ new #[Layout('components.layouts.app')]
                             </td>
                         </tr>
 
-                        <flux:modal name="verification-modal-{{ $report->id }}" class="max-w-6xl">
+                        <flux:modal name="verification-modal-{{ $report->id }}" class="max-w-7xl" :dismissible="false">
                             <div class="space-y-6">
                                 <div>
                                     <flux:heading size="lg">Verifikasi Laporan Aktivitas</flux:heading>
@@ -197,21 +197,12 @@ new #[Layout('components.layouts.app')]
                                                 </div>
                                             @endif
                                         </div>
-
-                                        @if($report->ocr_result)
-                                            <div>
-                                                <flux:label>Hasil OCR</flux:label>
-                                                <div class="mt-2 p-3 bg-zinc-50 dark:bg-zinc-900 rounded-lg text-xs font-mono text-zinc-700 dark:text-zinc-300 max-h-32 overflow-y-auto">
-                                                    {{ $report->ocr_result }}
-                                                </div>
-                                            </div>
-                                        @endif
                                     </div>
 
                                     <div class="space-y-4">
                                         <div class="p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
                                             <p class="text-sm text-orange-700 dark:text-orange-400 font-medium">⚠️ Request Verifikasi Manual</p>
-                                            <p class="text-xs text-orange-600 dark:text-orange-500 mt-1">Diajukan pada {{ $report->manual_verification_requested_at->format('d M Y H:i') }}</p>
+                                            <p class="text-xs text-orange-600 dark:text-orange-500 mt-1">Diajukan pada {{ $report->manual_verification_requested_at->format('d M Y H:i:s') }} WIB</p>
                                         </div>
 
                                         <div class="grid grid-cols-2 gap-4 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
@@ -232,6 +223,31 @@ new #[Layout('components.layouts.app')]
                                                 <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ number_format($report->langkah, 0, ',', '.') }}</p>
                                             </div>
                                         </div>
+                                        @if($report->ocr_result)
+                                            @php
+                                                $ocr = json_decode($report->ocr_result, true);
+                                                $previousImage = $report->ocrProcessLogs()->where('img_url', '!=', $report->bukti_screenshot)->latest()->first();
+                                            @endphp
+                                            <div>
+                                                <flux:label>Hasil OCR Sebelumnya</flux:label>
+                                                <div class="mt-2 p-3 bg-zinc-50 dark:bg-zinc-900 rounded-lg
+                                                            text-xs font-mono text-zinc-700 dark:text-zinc-300
+                                                            max-h-32 overflow-y-auto space-y-1">
+                                                    @if($previousImage)
+                                                        <div class="mb-2 pb-2 border-b border-zinc-200 dark:border-zinc-700">
+                                                            <div class="flex items-center justify-between">
+                                                                <strong class="text-blue-600 dark:text-blue-400">📷 Gambar Sebelumnya:</strong>
+                                                                <a href="{{ $previousImage->img_url }}" target="_blank" class="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded text-xs hover:bg-blue-200 dark:hover:bg-blue-800">Lihat</a>
+                                                            </div>
+                                                            <div class="text-zinc-500 dark:text-zinc-400 mt-1">Diproses: {{ $previousImage->created_at->format('d M Y H:i:s') }}</div>
+                                                        </div>
+                                                    @endif
+                                                    @foreach($ocr as $key => $value)
+                                                        <div><strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong> {{ $value }}</div>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        @endif
 
                                         <div>
                                             <flux:label>Jumlah Langkah Valid <span class="text-red-500">*</span></flux:label>
@@ -252,11 +268,15 @@ new #[Layout('components.layouts.app')]
                                         <div class="pt-4 border-t border-zinc-200 dark:border-zinc-700">
                                             <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-4">Pastikan data yang Anda masukkan sudah benar sebelum melakukan verifikasi.</p>
                                             <div class="flex gap-3">
-                                                <flux:button wire:click="rejectReport({{ $report->id }})" variant="danger" class="flex-1">
-                                                    <flux:icon.x-mark class="w-4 h-4" /> Tolak
+                                                <flux:button wire:click="rejectReport({{ $report->id }})"
+                                                    icon="x-mark"
+                                                    variant="danger" class="flex-1">
+                                                    Tolak
                                                 </flux:button>
-                                                <flux:button wire:click="approveReport({{ $report->id }})" variant="primary" class="flex-1">
-                                                    <flux:icon.check class="w-4 h-4" /> Verifikasi
+                                                <flux:button wire:click="approveReport({{ $report->id }})"
+                                                    icon="check"
+                                                    variant="primary" class="flex-1">
+                                                    Verifikasi
                                                 </flux:button>
                                             </div>
                                         </div>

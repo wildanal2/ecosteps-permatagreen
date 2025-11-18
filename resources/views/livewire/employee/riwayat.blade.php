@@ -108,12 +108,12 @@ new #[Layout('components.layouts.app.header')]
     <div class="flex flex-col gap-6 p-6">
 
         {{-- Trend Aktivitas --}}
-        <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-6">
+        <div class="rounded-2xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 shadow-sm p-6">
             <div class="flex items-center justify-between mb-1">
-                <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">Trend Aktivitas</h2>
-                <span class="text-xs text-gray-500 dark:text-gray-400">{{ $startOfWeek->format('d M') }} - {{ $endOfWeek->format('d M Y') }}</span>
+                <h2 class="text-lg font-semibold text-gray-800 dark:text-zinc-100">Trend Aktivitas</h2>
+                <span class="text-xs text-gray-500 dark:text-zinc-400">{{ $startOfWeek->format('d M') }} - {{ $endOfWeek->format('d M Y') }}</span>
             </div>
-            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            <p class="text-sm text-gray-600 dark:text-zinc-400 mb-4">
                 Pantau grafik perkembangan aktivitas berjalan dan pengurangan emisi dari waktu ke waktu.
             </p>
 
@@ -136,19 +136,19 @@ new #[Layout('components.layouts.app.header')]
             <button
                 wire:click="nextWeek"
                 wire:loading.attr="disabled"
-                class="flex items-center justify-center px-3 py-2 sm:px-4 sm:py-2 bg-gray-100 dark:bg-gray-700 rounded-md shadow transition-all hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:cursor-not-allowed w-full sm:w-auto">
+                class="flex items-center justify-center px-3 py-2 sm:px-4 sm:py-2 bg-gray-100 dark:bg-zinc-700 rounded-md shadow transition-all hover:bg-gray-200 dark:hover:bg-zinc-600 disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:cursor-not-allowed w-full sm:w-auto">
                 <flux:icon.chevron-left class="w-4 h-4 mr-1" />
-                <span class="font-medium text-gray-700 dark:text-gray-300 text-sm sm:text-base">Minggu Lalu</span>
+                <span class="font-medium text-gray-700 dark:text-zinc-300 text-sm sm:text-base">Minggu Lalu</span>
             </button>
-            <span class="px-3 py-2 sm:px-5 sm:py-2 rounded-xl font-semibold text-sm sm:text-base bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-sm text-gray-800 dark:text-gray-100 select-none text-center w-full sm:w-auto">
-                {{ $startOfWeek->format('d M') }} <span class="text-gray-400 dark:text-gray-400">-</span> {{ $endOfWeek->format('d M Y') }}
+            <span class="px-3 py-2 sm:px-5 sm:py-2 rounded-xl font-semibold text-sm sm:text-base bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 shadow-sm text-gray-800 dark:text-zinc-100 select-none text-center w-full sm:w-auto">
+                {{ $startOfWeek->format('d M') }} <span class="text-gray-400 dark:text-zinc-400">-</span> {{ $endOfWeek->format('d M Y') }}
             </span>
             <button
                 wire:click="prevWeek"
                 wire:loading.attr="disabled"
                 @if($weekOffset == 0) disabled @endif
-                class="flex items-center justify-center px-3 py-2 sm:px-4 sm:py-2 bg-gray-100 dark:bg-gray-700 rounded-md shadow transition-all hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:cursor-not-allowed w-full sm:w-auto">
-                <span class="font-medium text-gray-700 dark:text-gray-300 text-sm sm:text-base">Minggu Depan</span>
+                class="flex items-center justify-center px-3 py-2 sm:px-4 sm:py-2 bg-gray-100 dark:bg-zinc-700 rounded-md shadow transition-all hover:bg-gray-200 dark:hover:bg-zinc-600 disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:cursor-not-allowed w-full sm:w-auto">
+                <span class="font-medium text-gray-700 dark:text-zinc-300 text-sm sm:text-base">Minggu Depan</span>
                 <flux:icon.chevron-right class="w-4 h-4 ml-1" />
             </button>
         </div>
@@ -166,10 +166,10 @@ new #[Layout('components.layouts.app.header')]
                         };
                         $isToday = Carbon::parse($report->tanggal_laporan)->isToday();
                     @endphp
-                    <div class="rounded-2xl border {{ $isToday ? 'border-[#004646]' : 'border-gray-200 dark:border-gray-700' }} bg-white dark:bg-gray-900 {{ $isToday ? 'shadow-[0_0_20px_rgba(0,70,70,0.4)]' : 'shadow-sm' }} p-4 flex flex-col justify-between">
+                    <div class="rounded-2xl border {{ $isToday ? 'border-[#004646]' : 'border-gray-200 dark:border-zinc-700' }} bg-white dark:bg-zinc-800 {{ $isToday ? 'shadow-[0_0_20px_rgba(0,70,70,0.4)]' : 'shadow-sm' }} p-4 flex flex-col justify-between">
                         <div class="flex items-center justify-between mb-3">
                             <div class="flex items-center gap-2">
-                                <p class="text-gray-900 dark:text-gray-100 font-semibold mb-0">
+                                <p class="text-gray-900 dark:text-zinc-100 font-semibold mb-0">
                                     {{ Carbon::parse($report->tanggal_laporan)->format('d M Y') }}
                                 </p>
                                 @if($isToday)
@@ -183,7 +183,7 @@ new #[Layout('components.layouts.app.header')]
                             </span>
                         </div>
 
-                        <div class="grid grid-cols-3 text-center text-sm text-gray-800 dark:text-gray-200 mb-4">
+                        <div class="grid grid-cols-3 text-center text-sm text-gray-800 dark:text-zinc-200 mb-4">
                             <div>
                                 <p class="font-semibold">{{ number_format($report->langkah) }}</p>
                                 <p class="text-gray-500 dark:text-gray-400">Langkah</p>
@@ -245,18 +245,18 @@ new #[Layout('components.layouts.app.header')]
                         $isFuture = $currentDate->isFuture();
                         $isToday = $currentDate->isToday();
                     @endphp
-                    <div class="rounded-2xl border {{ $isToday ? 'border-[#004646]' : 'border-gray-200 dark:border-gray-700' }} bg-white dark:bg-gray-900 {{ $isToday ? 'shadow-[0_0_10px_rgba(0,70,70,0.4)]' : 'shadow-sm' }} p-8 text-center">
-                        <i class="ph {{ $isFuture ? 'ph-clock' : 'ph-file-x' }} text-4xl text-gray-400 dark:text-gray-600 mb-2"></i>
+                    <div class="rounded-2xl border {{ $isToday ? 'border-[#004646]' : 'border-gray-200 dark:border-zinc-700' }} bg-white dark:bg-zinc-800 {{ $isToday ? 'shadow-[0_0_10px_rgba(0,70,70,0.4)]' : 'shadow-sm' }} p-8 text-center">
+                        <i class="ph {{ $isFuture ? 'ph-clock' : 'ph-file-x' }} text-4xl text-gray-400 dark:text-zinc-600 mb-2"></i>
                         @if($isToday)
                             <br>
                             <p class="inline-block px-3 py-1 rounded-full bg-[#004646] text-white text-xs font-semibold">
                                 Hari ini
                             </p>
                         @endif
-                        <p class="text-gray-600 dark:text-gray-400 font-medium flex items-center justify-center gap-2">
+                        <p class="text-gray-600 dark:text-zinc-400 font-medium flex items-center justify-center gap-2">
                             {{ $isFuture ? 'Coming Soon' : 'Tidak ada data' }}
                         </p>
-                        <p class="text-gray-500 dark:text-gray-500 text-xs mt-1">{{ $currentDate->format('d M Y') }}</p>
+                        <p class="text-gray-500 dark:text-zinc-500 text-xs mt-1">{{ $currentDate->format('d M Y') }}</p>
                     </div>
                 @endif
             @endforeach

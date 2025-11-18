@@ -20,8 +20,8 @@ class DailyReport extends Model
         'ocr_result',
         'count_document',
         'verified_at',
-        'verified_id',
-        'verified_by',
+        'verified_id', //ADMIN / sistem
+        'verified_by', // id admin auth()->user id
         'manual_verification_requested',
         'manual_verification_requested_at',
     ];

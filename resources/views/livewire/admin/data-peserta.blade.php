@@ -49,7 +49,7 @@ new #[Layout('components.layouts.app')] #[Title('Data Peserta')] class extends C
     </div>
 
     <div class="max-w-7xl mx-auto space-y-6">
-        <div class="bg-white dark:bg-zinc-800 border border-gray-100 rounded-lg shadow p-6 space-y-6">
+        <div class="bg-white dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 rounded-lg shadow p-6 space-y-6">
             <div>
                 <flux:heading size="lg">Data Peserta</flux:heading>
                 <flux:subheading>Lihat progres setiap peserta dalam menjaga kebiasaan berjalan dan kontribusi hijau

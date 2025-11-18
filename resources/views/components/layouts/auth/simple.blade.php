@@ -3,7 +3,7 @@
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-screen bg-gray-50 flex flex-col">
+    <body class="min-h-screen bg-gray-50 dark:bg-zinc-900 flex flex-col">
 
         <div class="flex flex-col lg:flex-row w-full min-h-screen">
             {{-- Kiri: Form --}}
