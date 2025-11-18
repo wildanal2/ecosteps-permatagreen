@@ -3,7 +3,7 @@
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
-use Illuminate\Support\Facades\Http;
+use App\Services\OcrApiService;
 use App\Models\OcrProcessLog;
 
 new #[Layout('components.layouts.app')] #[Title('System Info')] class extends Component
@@ -25,15 +25,11 @@ new #[Layout('components.layouts.app')] #[Title('System Info')] class extends Co
             $this->loading = true;
             $this->error = null;
 
-            $response = Http::timeout(10)->get(env('OCRAPI_URL') . '/app-status');
-
-            if ($response->successful()) {
-                $this->systemInfo = $response->json();
-            } else {
-                $this->error = 'Failed to fetch system information';
-            }
+            $ocrService = new OcrApiService();
+            $this->systemInfo = $ocrService->getSystemInfo();
+            
         } catch (\Exception $e) {
-            $this->error = 'Unable to connect to OCR API service';
+            $this->error = $e->getMessage();
         } finally {
             $this->loading = false;
         }
