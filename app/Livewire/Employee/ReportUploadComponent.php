@@ -9,6 +9,7 @@ use Illuminate\Validation\Rule;
 use App\Models\DailyReport;
 use App\Enums\StatusVerifikasi;
 use App\Services\ImageProcessingService;
+use App\Helpers\UploadDebugger;
 
 class ReportUploadComponent extends Component
 {
@@ -19,16 +20,96 @@ class ReportUploadComponent extends Component
     public $uploadProgress = 0;
     public $uploadedUrl = null;
     public $showSuccess = false;
+    
+    /**
+     * Get maximum file size in bytes
+     */
+    private function getMaxFileSize(): int
+    {
+        return config('upload.max_file_size') * 1024; // Convert KB to bytes
+    }
+    
+    /**
+     * Get allowed MIME types
+     */
+    private function getAllowedMimeTypes(): array
+    {
+        return config('upload.allowed_mime_types');
+    }
 
-    protected $rules = [
-        'photo' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:15360', // 15MB
-    ];
+    protected function rules()
+    {
+        return [
+            'photo' => 'required|file|image|mimes:' . implode(',', config('upload.allowed_extensions')) . '|max:' . config('upload.max_file_size'),
+        ];
+    }
+
+    protected function messages()
+    {
+        return [
+            'photo.required' => config('upload.validation_messages.required'),
+            'photo.file' => config('upload.validation_messages.file'),
+            'photo.image' => config('upload.validation_messages.image'),
+            'photo.mimes' => config('upload.validation_messages.mimes'),
+            'photo.max' => config('upload.validation_messages.max'),
+        ];
+    }
 
     public function updatedPhoto()
     {
-        $this->validate([
-            'photo' => 'image|mimes:jpeg,png,jpg,gif,webp|max:15360', // 15MB
-        ]);
+        try {
+            // Debug environment on first upload attempt
+            UploadDebugger::debugEnvironment();
+            
+            // Reset previous errors
+            $this->resetErrorBag();
+            
+            // Check if file exists and is valid
+            if (!$this->photo) {
+                Log::warning('updatedPhoto called but no photo present');
+                return;
+            }
+            
+            // Debug file details
+            UploadDebugger::debugFile($this->photo);
+
+            // Check file size before validation
+            if ($this->photo->getSize() > 15360 * 1024) { // 15MB in bytes
+                $this->addError('photo', 'Ukuran file terlalu besar. Maksimal 15MB.');
+                return;
+            }
+
+            // Check if it's actually an image
+            $allowedMimes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
+            if (!in_array($this->photo->getMimeType(), $allowedMimes)) {
+                $this->addError('photo', 'File harus berupa gambar dengan format JPEG, PNG, JPG, GIF, atau WebP.');
+                return;
+            }
+
+            // Validate with custom messages
+            $this->validate([
+                'photo' => 'file|image|mimes:' . implode(',', config('upload.allowed_extensions')) . '|max:' . config('upload.max_file_size')
+            ], $this->messages());
+
+            Log::info('File validation passed', [
+                'filename' => $this->photo->getClientOriginalName(),
+                'size' => $this->photo->getSize(),
+                'mime_type' => $this->photo->getMimeType(),
+                'validation_rules' => 'file|image|mimes:' . implode(',', config('upload.allowed_extensions')) . '|max:' . config('upload.max_file_size')
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('File validation error', [
+                'error' => $e->getMessage(),
+                'file_info' => $this->photo ? [
+                    'name' => $this->photo->getClientOriginalName(),
+                    'size' => $this->photo->getSize(),
+                    'mime' => $this->photo->getMimeType()
+                ] : 'No file'
+            ]);
+            
+            $this->addError('photo', 'Terjadi kesalahan saat memvalidasi file: ' . $e->getMessage());
+        }
     }
 
     public function removePhoto()
@@ -43,7 +124,18 @@ class ReportUploadComponent extends Component
         $this->uploadProgress = 0;
 
         try {
-            $validated = $this->validate();
+            // Comprehensive file validation
+            $this->validateFileIntegrity();
+            
+            // Validate with detailed error messages
+            $validated = $this->validate($this->rules(), $this->messages());
+            
+            Log::info('Starting upload process', [
+                'user_id' => Auth::id(),
+                'file_name' => $this->photo->getClientOriginalName(),
+                'file_size' => $this->photo->getSize(),
+                'mime_type' => $this->photo->getMimeType()
+            ]);
 
             $user = Auth::user();
             $email = str_replace(['@', '.'], ['_', '_'], $user->email);
@@ -185,16 +277,104 @@ class ReportUploadComponent extends Component
             // Show success notification
             flash()->success('Laporan berhasil diunggah!');
             $this->reset(['photo', 'isUploading', 'uploadProgress', 'uploadedUrl', 'showSuccess']);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Validation failed during upload', [
+                'user_id' => Auth::id(),
+                'errors' => $e->errors(),
+                'file_info' => $this->getFileInfo()
+            ]);
+            
+            // Handle validation errors specifically
+            foreach ($e->errors() as $field => $messages) {
+                foreach ($messages as $message) {
+                    $this->addError($field, $message);
+                }
+            }
+            
+            $this->isUploading = false;
+            $this->uploadProgress = 0;
         } catch (\Exception $e) {
             Log::error('Report upload failed', [
                 'user_id' => Auth::id(),
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
+                'file_info' => $this->getFileInfo()
             ]);
 
             $this->addError('photo', $e->getMessage());
             $this->isUploading = false;
             $this->uploadProgress = 0;
+        }
+    }
+    
+    /**
+     * Get file information for logging
+     */
+    private function getFileInfo(): array
+    {
+        if (!$this->photo) {
+            return ['status' => 'no_file'];
+        }
+        
+        try {
+            return [
+                'name' => $this->photo->getClientOriginalName(),
+                'size' => $this->photo->getSize(),
+                'mime_type' => $this->photo->getMimeType(),
+                'extension' => $this->photo->extension(),
+                'is_valid' => $this->photo->isValid(),
+                'error' => $this->photo->getError()
+            ];
+        } catch (\Exception $e) {
+            return [
+                'status' => 'error_getting_info',
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+    
+    /**
+     * Validate file before processing
+     */
+    private function validateFileIntegrity(): void
+    {
+        if (!$this->photo) {
+            throw new \Exception('Tidak ada file yang dipilih.');
+        }
+        
+        if (!$this->photo->isValid()) {
+            $error = $this->photo->getError();
+            $errorMessages = config('upload.upload_errors');
+            
+            $message = $errorMessages[$error] ?? 'File upload error code: ' . $error;
+            
+            Log::error('File upload error', [
+                'error_code' => $error,
+                'error_message' => $message,
+                'file_info' => $this->getFileInfo()
+            ]);
+            
+            throw new \Exception($message);
+        }
+        
+        // Check file size
+        if ($this->photo->getSize() > $this->getMaxFileSize()) {
+            throw new \Exception(config('upload.validation_messages.max'));
+        }
+        
+        // Check MIME type
+        if (!in_array($this->photo->getMimeType(), $this->getAllowedMimeTypes())) {
+            throw new \Exception(config('upload.validation_messages.mimes'));
+        }
+        
+        // Additional check for image validity
+        try {
+            $imageInfo = getimagesize($this->photo->getRealPath());
+            if (!$imageInfo) {
+                throw new \Exception('File bukan gambar yang valid.');
+            }
+        } catch (\Exception $e) {
+            throw new \Exception('File gambar tidak valid atau rusak.');
         }
     }
 

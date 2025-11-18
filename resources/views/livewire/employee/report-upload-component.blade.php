@@ -68,8 +68,9 @@
                             x-ref="fileInput"
                             type="file"
                             wire:model="photo"
-                            accept="image/jpeg,image/png,image/jpg"
+                            accept="image/jpeg,image/png,image/jpg,image/gif,image/webp"
                             class="hidden"
+                            @change="console.log('File selected:', $event.target.files[0])"
                         />
                         <span class="text-xs text-gray-500 mb-4">JPEG atau PNG format, maksimal 15 MB</span>
                         <span class="inline-block">
@@ -87,11 +88,34 @@
                 @endif
 
                 <div wire:loading wire:target="photo" class="mt-3">
-                    <p class="text-sm text-blue-600">Mengupload...</p>
+                    <p class="text-sm text-blue-600">Memvalidasi file...</p>
                 </div>
+                
+                <div x-data="{
+                    init() {
+                        // Listen for Livewire upload errors
+                        window.addEventListener('livewire:upload-error', (e) => {
+                            console.error('Livewire upload error:', e.detail);
+                            alert('Upload error: ' + (e.detail.message || 'Unknown error'));
+                        });
+                        
+                        // Listen for Livewire upload progress
+                        window.addEventListener('livewire:upload-progress', (e) => {
+                            console.log('Upload progress:', e.detail.progress + '%');
+                        });
+                        
+                        // Listen for Livewire upload finish
+                        window.addEventListener('livewire:upload-finish', (e) => {
+                            console.log('Upload finished:', e.detail);
+                        });
+                    }
+                }"></div>
 
                 @error('photo')
-                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                    <div class="mt-2 p-3 bg-red-50 border border-red-200 rounded-md">
+                        <p class="text-sm text-red-600 font-medium">{{ $message }}</p>
+                        <p class="text-xs text-red-500 mt-1">Pastikan file adalah gambar dengan format JPEG, PNG, JPG, GIF, atau WebP dan ukuran maksimal 15MB.</p>
+                    </div>
                 @enderror
             @endif
         </div>

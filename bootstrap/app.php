@@ -17,6 +17,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'check.user.level' => \App\Http\Middleware\CheckUserLevel::class,
             'api.key' => \App\Http\Middleware\ValidateApiKey::class,
         ]);
+        
+        // Add middleware for Livewire upload error handling
+        $middleware->web(append: [
+            \App\Http\Middleware\HandleLivewireUploadErrors::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
