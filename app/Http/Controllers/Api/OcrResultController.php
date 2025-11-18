@@ -26,6 +26,7 @@ class OcrResultController extends Controller
             'raw_ocr' => 'nullable',
             'extracted_data' => 'nullable',
             'app_class' => 'nullable',
+            'processing_time_ms' => 'nullable',
         ]);
 
         $rawOcr = $validated['raw_ocr'] ?? '';
@@ -55,6 +56,7 @@ class OcrResultController extends Controller
                 'received_at' => now(),
                 'img_url' => $validated['img_url'] ?? null,
                 'verified_id' => VerifiedBy::SISTEM,
+                'processing_time_ms' => $validated['processing_time_ms'] ?? null,
             ]);
 
             Log::info('OcrProcessLog saved', ['log_id' => $ocrLog->id, 'report_id' => $validated['report_id']]);

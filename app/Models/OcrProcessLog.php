@@ -23,6 +23,7 @@ class OcrProcessLog extends Model
         'img_url',
         'verified_id',
         'verified_by',
+        'ocr_process_time_ms',
     ];
 
     protected $casts = [
