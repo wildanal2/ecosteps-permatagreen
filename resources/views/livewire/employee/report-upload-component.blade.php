@@ -71,7 +71,7 @@
                             accept="image/jpeg,image/png,image/jpg"
                             class="hidden"
                         />
-                        <span class="text-xs text-gray-500 mb-4">JPEG atau PNG format, maksimal 5 MB</span>
+                        <span class="text-xs text-gray-500 mb-4">JPEG atau PNG format, maksimal 15 MB</span>
                         <span class="inline-block">
                             <flux:button
                                 type="button"

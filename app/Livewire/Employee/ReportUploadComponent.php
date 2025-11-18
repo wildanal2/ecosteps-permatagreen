@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\{Storage, Auth, Http, Log};
 use Illuminate\Validation\Rule;
 use App\Models\DailyReport;
 use App\Enums\StatusVerifikasi;
+use App\Services\ImageProcessingService;
 
 class ReportUploadComponent extends Component
 {
@@ -20,13 +21,13 @@ class ReportUploadComponent extends Component
     public $showSuccess = false;
 
     protected $rules = [
-        'photo' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+        'photo' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:15360', // 15MB
     ];
 
     public function updatedPhoto()
     {
         $this->validate([
-            'photo' => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'photo' => 'image|mimes:jpeg,png,jpg,gif,webp|max:15360', // 15MB
         ]);
     }
 
@@ -50,20 +51,27 @@ class ReportUploadComponent extends Component
             $filename = "{$date}.{$this->photo->extension()}";
             $path = "reports/{$email}/{$filename}";
 
-            $this->uploadProgress = 30;
+            $this->uploadProgress = 20;
+
+            // Process image if needed
+            $imageProcessor = new ImageProcessingService();
+            $processedPhoto = $imageProcessor->processImage($this->photo);
+
+            $this->uploadProgress = 40;
 
             // Upload to S3
             Log::info('Starting file upload to S3', [
                 'user_id' => $user->id,
                 'filename' => $filename,
                 'path' => $path,
-                'file_size' => $this->photo->getSize()
+                'original_size' => $this->photo->getSize(),
+                'processed_size' => $processedPhoto->getSize()
             ]);
 
             try {
                 $result = Storage::disk('s3')->putFileAs(
                     dirname($path),
-                    $this->photo,
+                    $processedPhoto,
                     basename($path),
                     'public'
                 );
@@ -93,7 +101,7 @@ class ReportUploadComponent extends Component
                 's3_url' => rtrim(config('filesystems.disks.s3.url'), '/') . '/' . $path
             ]);
 
-            $this->uploadProgress = 60;
+            $this->uploadProgress = 70;
 
             $s3Url = rtrim(config('filesystems.disks.s3.url'), '/') . '/' . $path;
 
@@ -183,7 +191,7 @@ class ReportUploadComponent extends Component
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             $this->addError('photo', $e->getMessage());
             $this->isUploading = false;
             $this->uploadProgress = 0;

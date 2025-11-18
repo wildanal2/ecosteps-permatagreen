@@ -439,7 +439,6 @@ function initDashboardChart(labels, steps) {
         dashboardChart.data.labels = labels;
         dashboardChart.data.datasets[0].data = steps;
         dashboardChart.update();
-        console.log('Chart updated:', steps);
         return;
     }
 
@@ -487,7 +486,6 @@ function initDashboardChart(labels, steps) {
             }
         }
     });
-    console.log('Chart created:', steps);
 }
 
 let isUpdating = false;
@@ -507,7 +505,6 @@ Livewire.on('status-changed', async () => {
     isUpdating = true;
     const data = await $wire.getChartData();
     initDashboardChart(data.labels, data.steps);
-    console.log('Status changed, chart updated:', data.steps);
     setTimeout(() => isUpdating = false, 100);
 });
 

@@ -284,8 +284,6 @@ function createChart(labels, dates, steps) {
     const isDark = document.documentElement.classList.contains('dark');
     currentChartDates = dates;
 
-    console.log('Update chart dengan data:', dates);
-
     activityChart = new Chart(ctx, {
         type: 'bar',
         data: {
