@@ -72,7 +72,7 @@
                             class="hidden"
                             @change="console.log('File selected:', $event.target.files[0])"
                         />
-                        <span class="text-xs text-gray-500 mb-4">JPEG atau PNG format, maksimal 15 MB</span>
+                        <span class="text-xs text-gray-500 mb-4">JPEG, PNG, JPG, GIF, atau WebP format</span>
                         <span class="inline-block">
                             <flux:button
                                 type="button"
@@ -114,7 +114,7 @@
                 @error('photo')
                     <div class="mt-2 p-3 bg-red-50 border border-red-200 rounded-md">
                         <p class="text-sm text-red-600 font-medium">{{ $message }}</p>
-                        <p class="text-xs text-red-500 mt-1">Pastikan file adalah gambar dengan format JPEG, PNG, JPG, GIF, atau WebP dan ukuran maksimal 15MB.</p>
+                        <p class="text-xs text-red-500 mt-1">Pastikan file adalah gambar dengan format JPEG, PNG, JPG, GIF, atau WebP.</p>
                     </div>
                 @enderror
             @endif

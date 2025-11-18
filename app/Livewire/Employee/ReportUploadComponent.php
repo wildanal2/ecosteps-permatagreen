@@ -21,26 +21,12 @@ class ReportUploadComponent extends Component
     public $uploadedUrl = null;
     public $showSuccess = false;
     
-    /**
-     * Get maximum file size in bytes
-     */
-    private function getMaxFileSize(): int
-    {
-        return config('upload.max_file_size') * 1024; // Convert KB to bytes
-    }
-    
-    /**
-     * Get allowed MIME types
-     */
-    private function getAllowedMimeTypes(): array
-    {
-        return config('upload.allowed_mime_types');
-    }
+
 
     protected function rules()
     {
         return [
-            'photo' => 'required|file|image|mimes:' . implode(',', config('upload.allowed_extensions')) . '|max:' . config('upload.max_file_size'),
+            'photo' => 'required|file|image|mimes:' . implode(',', config('upload.allowed_extensions')),
         ];
     }
 
@@ -73,11 +59,7 @@ class ReportUploadComponent extends Component
             // Debug file details
             UploadDebugger::debugFile($this->photo);
 
-            // Check file size before validation
-            if ($this->photo->getSize() > 15360 * 1024) { // 15MB in bytes
-                $this->addError('photo', 'Ukuran file terlalu besar. Maksimal 15MB.');
-                return;
-            }
+
 
             // Check if it's actually an image
             $allowedMimes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
@@ -88,14 +70,14 @@ class ReportUploadComponent extends Component
 
             // Validate with custom messages
             $this->validate([
-                'photo' => 'file|image|mimes:' . implode(',', config('upload.allowed_extensions')) . '|max:' . config('upload.max_file_size')
+                'photo' => 'file|image|mimes:' . implode(',', config('upload.allowed_extensions'))
             ], $this->messages());
 
             Log::info('File validation passed', [
                 'filename' => $this->photo->getClientOriginalName(),
                 'size' => $this->photo->getSize(),
                 'mime_type' => $this->photo->getMimeType(),
-                'validation_rules' => 'file|image|mimes:' . implode(',', config('upload.allowed_extensions')) . '|max:' . config('upload.max_file_size')
+                'validation_rules' => 'file|image|mimes:' . implode(',', config('upload.allowed_extensions'))
             ]);
             
         } catch (\Exception $e) {
@@ -357,13 +339,10 @@ class ReportUploadComponent extends Component
             throw new \Exception($message);
         }
         
-        // Check file size
-        if ($this->photo->getSize() > $this->getMaxFileSize()) {
-            throw new \Exception(config('upload.validation_messages.max'));
-        }
+
         
         // Check MIME type
-        if (!in_array($this->photo->getMimeType(), $this->getAllowedMimeTypes())) {
+        if (!in_array($this->photo->getMimeType(), config('upload.allowed_mime_types'))) {
             throw new \Exception(config('upload.validation_messages.mimes'));
         }
         
