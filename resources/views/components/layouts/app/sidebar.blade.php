@@ -41,9 +41,11 @@
         </flux:navlist>
 
         <flux:spacer />
+        @if (auth()->user()->user_level == 2)
         <flux:sidebar.nav>
-            <flux:sidebar.item icon="information-circle" href="#">System Info</flux:sidebar.item>
+            <flux:sidebar.item icon="information-circle" :href="route('admin.system-info')" wire:navigate>System Info</flux:sidebar.item>
         </flux:sidebar.nav>
+        @endif
         <!-- Desktop User Menu -->
         <flux:dropdown class="hidden lg:block" position="bottom" align="start">
             @if (auth()->user()->profile_photo)
