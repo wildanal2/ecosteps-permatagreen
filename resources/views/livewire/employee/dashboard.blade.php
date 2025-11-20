@@ -12,6 +12,7 @@ new #[Layout('components.layouts.app.header')]
     class extends Component {
 
     public $previousStatus = null;
+    public $showAllDirectorates = false;
 
     protected $listeners = [
         'refresh-dashboard' => '$refresh',
@@ -142,6 +143,18 @@ new #[Layout('components.layouts.app.header')]
             ->select('user_statistics.*')
             ->first();
 
+        // Top Direktorat
+        $allDirectorates = UserStatistic::join('users', 'user_statistics.user_id', '=', 'users.id')
+            ->where('users.user_level', 1)
+            ->where('users.directorate', '!=', 0)
+            ->selectRaw('users.directorate, SUM(user_statistics.total_langkah) as total_langkah, SUM(user_statistics.total_co2e_kg) as total_co2e_kg')
+            ->groupBy('users.directorate')
+            ->orderByDesc('total_langkah')
+            ->get();
+
+        $topDirectorates = $this->showAllDirectorates ? $allDirectorates : $allDirectorates->take(10);
+        $totalDirectorates = $allDirectorates->count();
+
         return [
             'user' => $user,
             'stats' => $stats,
@@ -156,6 +169,8 @@ new #[Layout('components.layouts.app.header')]
             'userRank' => $userRank,
             'userAbove' => $userAbove,
             'userBelow' => $userBelow,
+            'topDirectorates' => $topDirectorates,
+            'totalDirectorates' => $totalDirectorates,
         ];
     }
 };
@@ -224,13 +239,13 @@ new #[Layout('components.layouts.app.header')]
                 </p>
 
                 {{-- Progress --}}
-                <div class="relative w-full bg-gray-100 dark:bg-zinc-700 rounded-md h-10 mb-4 overflow-hidden">
-                    <div class="absolute h-10 transition-all" style="width: {{ $progressPercent }}%; background: {{ $todaySteps >= $targetSteps ? 'repeating-linear-gradient(90deg, #004646 0px, #004646 8px, transparent 8px, transparent 10px)' : 'repeating-linear-gradient(90deg, #facc15 0px, #facc15 8px, transparent 8px, transparent 10px)' }};"></div>
+                <div class="relative w-full rounded-md h-10 mb-4 overflow-hidden">
+                    <div class="hidden absolute h-10 transition-all" style="width: {{ $progressPercent }}%; background: {{ $todaySteps >= $targetSteps ? 'repeating-linear-gradient(90deg, #004646 0px, #004646 8px, transparent 8px, transparent 10px)' : 'repeating-linear-gradient(90deg, #facc15 0px, #facc15 8px, transparent 8px, transparent 10px)' }};"></div>
                     <div class="absolute inset-0 flex items-center justify-center z-10">
-                        <p class="text-xs text-gray-800 dark:text-zinc-300 font-medium px-1.5 py-0.5 rounded-md
+                        <p class="text-xs text-gray-800 dark:text-zinc-300 font-medium px-2 py-1 rounded-md border border-gray-50
                                 backdrop-blur-md bg-white/45 dark:bg-white/10 shadow-md">
                             Langkah hari ini
-                            <span class="font-bold text-base mx-1">
+                            <span class="font-bold text-lg mx-1">
                                 {{ number_format($todaySteps, 0, ',', '.') }}
                             </span>
                             /{{ number_format($targetSteps, 0, ',', '.') }} langkah 🏃
@@ -381,7 +396,7 @@ new #[Layout('components.layouts.app.header')]
 
             {{-- RIGHT CARD: TOP 10 --}}
             <div class="bg-white dark:bg-zinc-800 rounded-2xl shadow-lg p-6 border border-gray-100 dark:border-zinc-700">
-                <h2 class="text-2xl font-semibold mb-4 text-gray-900 dark:text-zinc-100">10 Permata Banker Teratas</h2>
+                <h2 class="text-2xl font-semibold mb-4 text-gray-900 dark:text-zinc-100">10 Permatabankers Teratas</h2>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-gray-700 dark:text-zinc-300">
                         <thead>
@@ -405,6 +420,38 @@ new #[Layout('components.layouts.app.header')]
                     </table>
                 </div>
             </div>
+        </div>
+
+        {{-- Card: Top Direktorat --}}
+        <div class="bg-white dark:bg-zinc-800 rounded-2xl shadow-lg p-6 border border-gray-100 dark:border-zinc-700">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-900 dark:text-zinc-100">{{ $showAllDirectorates ? 'Semua' : '10' }} Direktorat Teratas</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-gray-700 dark:text-zinc-300">
+                    <thead>
+                        <tr class="border-b text-sm text-gray-500 dark:text-zinc-400">
+                            <th class="py-2">Peringkat</th>
+                            <th>Direktorat</th>
+                            <th>Total Langkah</th>
+                            <th>CO₂e</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm">
+                        @foreach($topDirectorates as $index => $directorate)
+                            <tr class="border-b dark:border-zinc-700">
+                                <td class="py-2">#{{ $index + 1 }}</td>
+                                <td>{{ \App\Enums\Directorate::from($directorate->directorate)->label() }}</td>
+                                <td>{{ number_format($directorate->total_langkah, 0, ',', '.') }}</td>
+                                <td>{{ number_format($directorate->total_co2e_kg, 1, ',', '.') }} kg</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @if($totalDirectorates > 10)
+                <button wire:click="$toggle('showAllDirectorates')" class="w-full mt-4 bg-gray-100 dark:bg-zinc-700 py-2 rounded-xl text-gray-700 dark:text-zinc-300 font-medium hover:bg-gray-200 dark:hover:bg-zinc-600 transition">
+                    {{ $showAllDirectorates ? 'Tampilkan Lebih Sedikit' : 'Tampilkan Semua (' . $totalDirectorates . ')' }}
+                </button>
+            @endif
         </div>
     </div>
 

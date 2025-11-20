@@ -20,7 +20,7 @@ class ReportUploadComponent extends Component
     public $uploadProgress = 0;
     public $uploadedUrl = null;
     public $showSuccess = false;
-    
+
 
 
     protected function rules()
@@ -46,16 +46,16 @@ class ReportUploadComponent extends Component
         try {
             // Debug environment on first upload attempt
             UploadDebugger::debugEnvironment();
-            
+
             // Reset previous errors
             $this->resetErrorBag();
-            
+
             // Check if file exists and is valid
             if (!$this->photo) {
                 Log::warning('updatedPhoto called but no photo present');
                 return;
             }
-            
+
             // Debug file details
             UploadDebugger::debugFile($this->photo);
 
@@ -79,7 +79,7 @@ class ReportUploadComponent extends Component
                 'mime_type' => $this->photo->getMimeType(),
                 'validation_rules' => 'file|image|mimes:' . implode(',', config('upload.allowed_extensions'))
             ]);
-            
+
         } catch (\Exception $e) {
             Log::error('File validation error', [
                 'error' => $e->getMessage(),
@@ -89,7 +89,7 @@ class ReportUploadComponent extends Component
                     'mime' => $this->photo->getMimeType()
                 ] : 'No file'
             ]);
-            
+
             $this->addError('photo', 'Terjadi kesalahan saat memvalidasi file: ' . $e->getMessage());
         }
     }
@@ -108,10 +108,10 @@ class ReportUploadComponent extends Component
         try {
             // Comprehensive file validation
             $this->validateFileIntegrity();
-            
+
             // Validate with detailed error messages
             $validated = $this->validate($this->rules(), $this->messages());
-            
+
             Log::info('Starting upload process', [
                 'user_id' => Auth::id(),
                 'file_name' => $this->photo->getClientOriginalName(),
@@ -223,6 +223,7 @@ class ReportUploadComponent extends Component
                     'report_id' => $report->id,
                     'user_id' => $user->id,
                     's3_url' => $s3Url,
+                    'environment' => config('app.env', 'staging'),
                 ]);
 
                 $response = Http::timeout(10)
@@ -231,6 +232,7 @@ class ReportUploadComponent extends Component
                         'report_id' => $report->id,
                         'user_id' => $user->id,
                         's3_url' => $s3Url,
+                        'environment' => config('app.env', 'staging'),
                     ]);
 
                 if ($response->successful()) {
@@ -265,14 +267,14 @@ class ReportUploadComponent extends Component
                 'errors' => $e->errors(),
                 'file_info' => $this->getFileInfo()
             ]);
-            
+
             // Handle validation errors specifically
             foreach ($e->errors() as $field => $messages) {
                 foreach ($messages as $message) {
                     $this->addError($field, $message);
                 }
             }
-            
+
             $this->isUploading = false;
             $this->uploadProgress = 0;
         } catch (\Exception $e) {
@@ -288,7 +290,7 @@ class ReportUploadComponent extends Component
             $this->uploadProgress = 0;
         }
     }
-    
+
     /**
      * Get file information for logging
      */
@@ -297,7 +299,7 @@ class ReportUploadComponent extends Component
         if (!$this->photo) {
             return ['status' => 'no_file'];
         }
-        
+
         try {
             return [
                 'name' => $this->photo->getClientOriginalName(),
@@ -314,7 +316,7 @@ class ReportUploadComponent extends Component
             ];
         }
     }
-    
+
     /**
      * Validate file before processing
      */
@@ -323,29 +325,29 @@ class ReportUploadComponent extends Component
         if (!$this->photo) {
             throw new \Exception('Tidak ada file yang dipilih.');
         }
-        
+
         if (!$this->photo->isValid()) {
             $error = $this->photo->getError();
             $errorMessages = config('upload.upload_errors');
-            
+
             $message = $errorMessages[$error] ?? 'File upload error code: ' . $error;
-            
+
             Log::error('File upload error', [
                 'error_code' => $error,
                 'error_message' => $message,
                 'file_info' => $this->getFileInfo()
             ]);
-            
+
             throw new \Exception($message);
         }
-        
 
-        
+
+
         // Check MIME type
         if (!in_array($this->photo->getMimeType(), config('upload.allowed_mime_types'))) {
             throw new \Exception(config('upload.validation_messages.mimes'));
         }
-        
+
         // Additional check for image validity
         try {
             $imageInfo = getimagesize($this->photo->getRealPath());
