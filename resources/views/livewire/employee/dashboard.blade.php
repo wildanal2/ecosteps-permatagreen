@@ -88,7 +88,6 @@ new #[Layout('components.layouts.app.header')]
         // Hitung progress hari ini
         $todaySteps = $todayReport?->langkah ?? 0;
         $targetSteps = 10000;
-        $progressPercent = min(($todaySteps / $targetSteps) * 100, 100);
 
         // Chart data (7 hari terakhir)
         $chartDates = collect();
@@ -161,7 +160,6 @@ new #[Layout('components.layouts.app.header')]
             'todayReport' => $todayReport,
             'todaySteps' => $todaySteps,
             'targetSteps' => $targetSteps,
-            'progressPercent' => $progressPercent,
             'chartLabels' => $chartLabels,
             'chartSteps' => $chartSteps,
             'hasReportedToday' => $todayReport !== null,
@@ -182,7 +180,7 @@ new #[Layout('components.layouts.app.header')]
         {{-- Header --}}
         <div>
             <h2 class="text-xl font-semibold text-gray-800 dark:text-zinc-100">
-                Selamat datang di Walk for Elephant, <span class="text-gray-900 dark:text-zinc-100 font-bold">{{ $user->name }}</span>
+                Selamat datang di Move for Elephant, <span class="text-gray-900 dark:text-zinc-100 font-bold">{{ $user->name }}</span>
             </h2>
             <p class="text-sm text-gray-600 dark:text-zinc-400 mb-4">
                 Lihat progres langkah anda hari ini dan sejauh mana anda berkontribusi dalam gerakan hijau.
@@ -239,19 +237,9 @@ new #[Layout('components.layouts.app.header')]
                 </p>
 
                 {{-- Progress --}}
-                <div class="relative w-full rounded-md h-10 mb-4 overflow-hidden">
-                    <div class="hidden absolute h-10 transition-all" style="width: {{ $progressPercent }}%; background: {{ $todaySteps >= $targetSteps ? 'repeating-linear-gradient(90deg, #004646 0px, #004646 8px, transparent 8px, transparent 10px)' : 'repeating-linear-gradient(90deg, #facc15 0px, #facc15 8px, transparent 8px, transparent 10px)' }};"></div>
-                    <div class="absolute inset-0 flex items-center justify-center z-10">
-                        <p class="text-xs text-gray-800 dark:text-zinc-300 font-medium px-2 py-1 rounded-md border border-gray-50
-                                backdrop-blur-md bg-white/45 dark:bg-white/10 shadow-md">
-                            Langkah hari ini
-                            <span class="font-bold text-lg mx-1">
-                                {{ number_format($todaySteps, 0, ',', '.') }}
-                            </span>
-                            /{{ number_format($targetSteps, 0, ',', '.') }} langkah 🏃
-                        </p>
-
-                    </div>
+                <div class="relative w-full text-center rounded-md h-10 mb-6 overflow-hidden">
+                    <span class="text-4xl font-bold">{{ number_format($todaySteps, 0, ',', '.') }} </span>
+                    langkah
                 </div>
 
                 <flux:modal.trigger name="upload-harian">
