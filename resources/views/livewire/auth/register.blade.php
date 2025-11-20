@@ -14,7 +14,7 @@ new #[Layout('components.layouts.auth')]
     #[Rule('required|string|max:255')]
     public string $name = '';
 
-    #[Rule('required|email|max:255|unique:users,email')]
+    #[Rule('required|email|max:255|unique:users,email|ends_with:permatabank.co.id|regex:/^[A-Za-z0-9._%+-]+@permatabank\.co\.id$/i')]
     public string $email = '';
 
     #[Rule('required|string|min:6')]
@@ -36,6 +36,8 @@ new #[Layout('components.layouts.auth')]
             'email.required' => 'Email corporate wajib diisi.',
             'email.email' => 'Format email tidak valid.',
             'email.unique' => 'Email sudah terdaftar.',
+            'email.regex' => 'Email harus menggunakan domain @permatabank.co.id.',
+            'email.ends_with' => 'Email harus menggunakan domain @permatabank.co.id.',
             'password.required' => 'Password wajib diisi.',
             'password.min' => 'Password minimal :min karakter.',
             'directorate.required' => 'Direktorat wajib dipilih.',
