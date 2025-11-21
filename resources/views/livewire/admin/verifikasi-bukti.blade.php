@@ -56,6 +56,22 @@ new #[Layout('components.layouts.app')]
 
         $report = DailyReport::find($reportId);
         if ($report) {
+            // Refresh data dari database untuk hindari race condition
+            $report->refresh();
+
+            // Cek apakah sudah diverifikasi (baik oleh OCR atau admin lain)
+            if ($report->status_verifikasi === StatusVerifikasi::DIVERIFIKASI && $report->verified_by) {
+                $verifiedBy = $report->verified_id == VerifiedBy::SISTEM ? 'sistem OCR' : 'Admin lain';
+                flash()->warning("Laporan sudah diverifikasi oleh {$verifiedBy}");
+                return;
+            }
+
+            // Cek apakah request manual verification sudah dibatalkan
+            if (!$report->manual_verification_requested) {
+                flash()->info('Request verifikasi manual sudah dibatalkan');
+                return;
+            }
+
             ManualVerificationLog::create([
                 'report_id' => $report->id,
                 'image_url' => $report->bukti_screenshot,

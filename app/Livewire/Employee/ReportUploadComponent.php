@@ -193,6 +193,8 @@ class ReportUploadComponent extends Component
                 $report->update([
                     'bukti_screenshot' => $s3Url,
                     'status_verifikasi' => StatusVerifikasi::PENDING,
+                    'manual_verification_requested' => false,
+                    'manual_verification_requested_at' => null,
                 ]);
                 $report->increment('count_document');
                 Log::info('Daily report updated', ['report_id' => $report->id]);
