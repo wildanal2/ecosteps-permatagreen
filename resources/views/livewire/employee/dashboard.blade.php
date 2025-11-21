@@ -176,7 +176,7 @@ new #[Layout('components.layouts.app.header')]
 ?>
 
 <flux:main container class="">
-    <div class="flex flex-col gap-6 p-6">
+    <div class="flex flex-col gap-6">
         {{-- Header --}}
         <div>
             <h2 class="text-xl font-semibold text-gray-800 dark:text-zinc-100">
@@ -218,7 +218,7 @@ new #[Layout('components.layouts.app.header')]
         </div>
 
         {{-- Grid Atas --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
             {{-- Progres Harian --}}
             <div class="rounded-2xl bg-white dark:bg-zinc-800 p-5 shadow-sm border border-gray-100 dark:border-zinc-700">
