@@ -180,7 +180,7 @@ new #[Layout('components.layouts.app.header')]
         {{-- Header --}}
         <div>
             <h2 class="text-xl font-semibold text-gray-800 dark:text-zinc-100">
-                Selamat datang di Move for Elephant, <span class="text-gray-900 dark:text-zinc-100 font-bold">{{ $user->name }}</span>
+                Selamat datang di Move for Elephants, <span class="text-gray-900 dark:text-zinc-100 font-bold">{{ $user->name }}</span>
             </h2>
             <p class="text-sm text-gray-600 dark:text-zinc-400 mb-4">
                 Lihat progres langkah Anda hari ini dan sejauh mana Anda berkontribusi dalam gerakan hijau.

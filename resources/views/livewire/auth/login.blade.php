@@ -60,7 +60,7 @@ new #[Layout('components.layouts.auth')]
 
 ?>
 
-<div class="flex items-center justify-center min-h-screen lg:min-h-0 lg:block">
+<div class="flex items-center justify-center min-h-screen lg:min-h-0 lg:block w-full">
     <div class="w-full p-8 max-w-md lg:max-w-full bg-white dark:bg-zinc-800 lg:bg-gray-50 lg:dark:bg-zinc-900 rounded-2xl shadow-sm lg:shadow-none">
 
         {{-- Header --}}

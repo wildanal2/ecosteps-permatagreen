@@ -56,7 +56,7 @@ new #[Layout('components.layouts.app')]
         $participants = $participantsQuery->paginate(10, ['*'], 'participantsPage');
         $participantIds = $participants->pluck('id');
         $statistics = UserStatistic::whereIn('user_id', $participantIds)->get()->keyBy('user_id');
-        
+
         foreach ($participants as $participant) {
             $participant->statistics = $statistics->get($participant->id);
             $participant->directorate = \App\Enums\Directorate::tryFrom($participant->directorate);
@@ -89,9 +89,9 @@ new #[Layout('components.layouts.app')]
 <div>
     <div class="flex justify-between py-5 mb-5">
         <div>
-            <flux:heading size="xl">Leaderboard - Langkah Hijau Permata Banker</flux:heading>
+            <flux:heading size="xl">Leaderboard - Langkah Hijau PermataBankers</flux:heading>
             <flux:text class="mt-2 max-w-4xl">
-                Lihat peringkat langkah para Permata Banker dan kontribusi terhadap pengurangan emisi CO₂e. Setiap langkah yang anda ambil membawa dampak nyata bagi bumi dan direktorat anda.
+                Lihat peringkat langkah para PermataBankers dan kontribusi terhadap pengurangan emisi CO₂e. Setiap langkah yang anda ambil membawa dampak nyata bagi bumi dan direktorat anda.
             </flux:text>
         </div>
 
