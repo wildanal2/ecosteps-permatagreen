@@ -183,7 +183,7 @@ new #[Layout('components.layouts.app.header')]
                 Selamat datang di Move for Elephant, <span class="text-gray-900 dark:text-zinc-100 font-bold">{{ $user->name }}</span>
             </h2>
             <p class="text-sm text-gray-600 dark:text-zinc-400 mb-4">
-                Lihat progres langkah anda hari ini dan sejauh mana anda berkontribusi dalam gerakan hijau.
+                Lihat progres langkah Anda hari ini dan sejauh mana Anda berkontribusi dalam gerakan hijau.
             </p>
 
             {{-- Alert --}}
@@ -201,7 +201,7 @@ new #[Layout('components.layouts.app.header')]
                 <div class="mt-3 rounded-xl flex justify-between items-center bg-red-100 text-red-700 px-4 py-3">
                     <div class="flex items-center gap-2 mb-2">
                         <flux:icon.x-circle class="w-5 h-5" />
-                        <span>Langkah anda gagal terverifikasi</span>
+                        <span>Langkah Anda gagal terverifikasi</span>
                     </div>
                     @if(!$todayReport->manual_verification_requested)
                         <button
@@ -233,7 +233,7 @@ new #[Layout('components.layouts.app.header')]
                     @endif
                 </div>
                 <p class="text-sm text-gray-600 dark:text-zinc-400 mb-4">
-                    Setiap langkah yang anda ambil bukan hanya menambah poin, tapi juga mengurangi jejak karbon
+                    Setiap langkah yang Anda ambil bukan hanya menambah poin, tapi juga mengurangi jejak karbon
                 </p>
 
                 {{-- Progress --}}
@@ -261,7 +261,7 @@ new #[Layout('components.layouts.app.header')]
             <div class="rounded-2xl bg-white dark:bg-zinc-800 p-5 shadow-sm border border-gray-100 dark:border-zinc-700">
                 <h3 class="text-lg font-semibold text-gray-800 dark:text-zinc-100 mb-2">Lihat Rekap Mingguan Anda</h3>
                 <p class="text-sm text-gray-600 dark:text-zinc-400 mb-4">
-                    Pantau progres langkah dan dampak hijau yang sudah anda ciptakan minggu ini!
+                    Pantau progres langkah dan dampak hijau yang sudah Anda ciptakan minggu ini!
                 </p>
 
                 {{-- Chart --}}
@@ -384,7 +384,7 @@ new #[Layout('components.layouts.app.header')]
 
             {{-- RIGHT CARD: TOP 10 --}}
             <div class="bg-white dark:bg-zinc-800 rounded-2xl shadow-lg p-6 border border-gray-100 dark:border-zinc-700">
-                <h2 class="text-2xl font-semibold mb-4 text-gray-900 dark:text-zinc-100">10 Permatabankers Teratas</h2>
+                <h2 class="text-2xl font-semibold mb-4 text-gray-900 dark:text-zinc-100">10 PermataBankers Teratas</h2>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-gray-700 dark:text-zinc-300">
                         <thead>

@@ -67,7 +67,7 @@ new #[Layout('components.layouts.auth')]
         <div class="flex flex-col items-start gap-2 text-left mb-5">
             <img src="{{ asset('assets/images/logo.png') }}" alt="Permata Bank" class="h-18 mb-2">
             <h1 class="text-3xl font-semibold text-gray-900 dark:text-zinc-100">Move for Elephants</h1>
-            <p class="text-sm text-gray-500 dark:text-zinc-400">Challenge 1 bulan untuk seluruh Permata Bankers guna membangun kebiasaan sehat dan ramah lingkungan.</p>
+            <p class="text-sm text-gray-500 dark:text-zinc-400">Challenge 1 bulan untuk seluruh PermataBankers guna membangun kebiasaan sehat dan ramah lingkungan.</p>
         </div>
 
         {{-- Session Status --}}
