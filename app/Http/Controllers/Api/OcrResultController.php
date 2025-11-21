@@ -88,6 +88,13 @@ class OcrResultController extends Controller
 
                     Log::info('DailyReport rejected - no valid steps', ['report_id' => $report->id]);
 
+                    // Auto Update to Manual Verification
+                    $report->update([
+                        'status_verifikasi' => StatusVerifikasi::PENDING,
+                        'manual_verification_requested' => true,
+                        'manual_verification_requested_at' => now(),
+                    ]);
+
                     broadcast(new DailyReportUpdated($validated['user_id'], $report->id, 'rejected'));
 
                     return response()->json(['success' => true, 'report_id' => $report->id, 'status' => 'rejected']);
