@@ -121,7 +121,7 @@ new #[Layout('components.layouts.app')]
     <div class="py-5 mb-5">
         <flux:heading size="xl">Verifikasi Bukti Aktivitas</flux:heading>
         <flux:text class="mt-2">
-            Kelola dan validasi laporan aktivitas Permata Banker untuk memastikan setiap langkah benar-benar tercatat dan berdampak bagi lingkungan
+            Kelola dan validasi laporan aktivitas PermataBankers untuk memastikan setiap langkah benar-benar tercatat dan berdampak bagi lingkungan
         </flux:text>
     </div>
 

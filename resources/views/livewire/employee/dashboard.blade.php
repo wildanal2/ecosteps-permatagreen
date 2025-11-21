@@ -176,14 +176,14 @@ new #[Layout('components.layouts.app.header')]
 ?>
 
 <flux:main container class="">
-    <div class="flex flex-col gap-6 p-6">
+    <div class="flex flex-col gap-6">
         {{-- Header --}}
         <div>
             <h2 class="text-xl font-semibold text-gray-800 dark:text-zinc-100">
-                Selamat datang di Move for Elephant, <span class="text-gray-900 dark:text-zinc-100 font-bold">{{ $user->name }}</span>
+                Selamat datang di Move for Elephants, <span class="text-gray-900 dark:text-zinc-100 font-bold">{{ $user->name }}</span>
             </h2>
             <p class="text-sm text-gray-600 dark:text-zinc-400 mb-4">
-                Lihat progres langkah anda hari ini dan sejauh mana anda berkontribusi dalam gerakan hijau.
+                Lihat progres langkah Anda hari ini dan sejauh mana Anda berkontribusi dalam gerakan hijau.
             </p>
 
             {{-- Alert --}}
@@ -201,7 +201,7 @@ new #[Layout('components.layouts.app.header')]
                 <div class="mt-3 rounded-xl flex justify-between items-center bg-red-100 text-red-700 px-4 py-3">
                     <div class="flex items-center gap-2 mb-2">
                         <flux:icon.x-circle class="w-5 h-5" />
-                        <span>Langkah anda gagal terverifikasi</span>
+                        <span>Langkah Anda gagal terverifikasi</span>
                     </div>
                     @if(!$todayReport->manual_verification_requested)
                         <button
@@ -218,7 +218,7 @@ new #[Layout('components.layouts.app.header')]
         </div>
 
         {{-- Grid Atas --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
             {{-- Progres Harian --}}
             <div class="rounded-2xl bg-white dark:bg-zinc-800 p-5 shadow-sm border border-gray-100 dark:border-zinc-700">
@@ -233,7 +233,7 @@ new #[Layout('components.layouts.app.header')]
                     @endif
                 </div>
                 <p class="text-sm text-gray-600 dark:text-zinc-400 mb-4">
-                    Setiap langkah yang anda ambil bukan hanya menambah poin, tapi juga mengurangi jejak karbon
+                    Setiap langkah yang Anda ambil bukan hanya menambah poin, tapi juga mengurangi jejak karbon
                 </p>
 
                 {{-- Progress --}}
@@ -243,9 +243,9 @@ new #[Layout('components.layouts.app.header')]
                 </div>
 
                 <flux:modal.trigger name="upload-harian">
-                    <button class="w-full bg-blue-600 text-white py-2 rounded-xl font-semibold hover:bg-blue-700 transition">
-                        Kirim Laporan Hari Ini
+                    <button class="w-full bg-blue-600 text-white py-2 rounded-xl font-semibold hover:bg-blue-700 transition flex items-center justify-center gap-2">
                         <i class="ph-fill ph-footprints"></i>
+                        Kirim Laporan Hari Ini
                     </button>
                 </flux:modal.trigger>
                 <a
@@ -261,7 +261,7 @@ new #[Layout('components.layouts.app.header')]
             <div class="rounded-2xl bg-white dark:bg-zinc-800 p-5 shadow-sm border border-gray-100 dark:border-zinc-700">
                 <h3 class="text-lg font-semibold text-gray-800 dark:text-zinc-100 mb-2">Lihat Rekap Mingguan Anda</h3>
                 <p class="text-sm text-gray-600 dark:text-zinc-400 mb-4">
-                    Pantau progres langkah dan dampak hijau yang sudah anda ciptakan minggu ini!
+                    Pantau progres langkah dan dampak hijau yang sudah Anda ciptakan minggu ini!
                 </p>
 
                 {{-- Chart --}}
@@ -384,24 +384,24 @@ new #[Layout('components.layouts.app.header')]
 
             {{-- RIGHT CARD: TOP 10 --}}
             <div class="bg-white dark:bg-zinc-800 rounded-2xl shadow-lg p-6 border border-gray-100 dark:border-zinc-700">
-                <h2 class="text-2xl font-semibold mb-4 text-gray-900 dark:text-zinc-100">10 Permatabankers Teratas</h2>
+                <h2 class="text-2xl font-semibold mb-4 text-gray-900 dark:text-zinc-100">10 PermataBankers Teratas</h2>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-gray-700 dark:text-zinc-300">
                         <thead>
                             <tr class="border-b text-sm text-gray-500 dark:text-zinc-400">
-                                <th class="py-2">Peringkat</th>
-                                <th>Nama</th>
-                                <th>Total Langkah</th>
-                                <th>CO₂e</th>
+                                <th class="p-2">#</th>
+                                <th class="p-2">Nama</th>
+                                <th class="p-2">Langkah</th>
+                                <th class="p-2">CO₂e</th>
                             </tr>
                         </thead>
                         <tbody class="text-sm">
                             @foreach($leaderboard as $index => $leader)
                                 <tr class="border-b dark:border-zinc-700">
-                                    <td class="py-2">#{{ $index + 1 }}</td>
-                                    <td>{{ Str::limit($leader->user->name, 20) }}</td>
-                                    <td>{{ number_format($leader->total_langkah, 0, ',', '.') }}</td>
-                                    <td>{{ number_format($leader->total_co2e_kg, 1, ',', '.') }} kg</td>
+                                    <td class="p-2">#{{ $index + 1 }}</td>
+                                    <td class="p-2">{{ Str::limit($leader->user->name, 20) }}</td>
+                                    <td class="p-2">{{ number_format($leader->total_langkah, 0, ',', '.') }}</td>
+                                    <td class="p-2">{{ number_format($leader->total_co2e_kg, 1, ',', '.') }} kg</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -417,19 +417,19 @@ new #[Layout('components.layouts.app.header')]
                 <table class="w-full text-left text-gray-700 dark:text-zinc-300">
                     <thead>
                         <tr class="border-b text-sm text-gray-500 dark:text-zinc-400">
-                            <th class="py-2">Peringkat</th>
-                            <th>Direktorat</th>
-                            <th>Total Langkah</th>
-                            <th>CO₂e</th>
+                            <th class="p-2">#</th>
+                            <th class="p-2">Direktorat</th>
+                            <th class="p-2">Langkah</th>
+                            <th class="p-2">CO₂e</th>
                         </tr>
                     </thead>
                     <tbody class="text-sm">
                         @foreach($topDirectorates as $index => $directorate)
                             <tr class="border-b dark:border-zinc-700">
-                                <td class="py-2">#{{ $index + 1 }}</td>
-                                <td>{{ \App\Enums\Directorate::from($directorate->directorate)->label() }}</td>
-                                <td>{{ number_format($directorate->total_langkah, 0, ',', '.') }}</td>
-                                <td>{{ number_format($directorate->total_co2e_kg, 1, ',', '.') }} kg</td>
+                                <td class="p-2">#{{ $index + 1 }}</td>
+                                <td class="p-2">{{ \App\Enums\Directorate::from($directorate->directorate)->label() }}</td>
+                                <td class="p-2">{{ number_format($directorate->total_langkah, 0, ',', '.') }}</td>
+                                <td class="p-2">{{ number_format($directorate->total_co2e_kg, 1, ',', '.') }} kg</td>
                             </tr>
                         @endforeach
                     </tbody>
