@@ -243,9 +243,9 @@ new #[Layout('components.layouts.app.header')]
                 </div>
 
                 <flux:modal.trigger name="upload-harian">
-                    <button class="w-full bg-blue-600 text-white py-2 rounded-xl font-semibold hover:bg-blue-700 transition">
-                        Kirim Laporan Hari Ini
+                    <button class="w-full bg-blue-600 text-white py-2 rounded-xl font-semibold hover:bg-blue-700 transition flex items-center justify-center gap-2">
                         <i class="ph-fill ph-footprints"></i>
+                        Kirim Laporan Hari Ini
                     </button>
                 </flux:modal.trigger>
                 <a
