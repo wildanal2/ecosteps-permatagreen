@@ -4,14 +4,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <!-- SEO META -->
-<meta name="description" content="Melangkah Penghijauan — Program CSR PermataBank untuk memantau langkahmu dan menanam pohon demi lingkungan yang lebih hijau." />
+<meta name="description" content="Hanya dengan menghitung dan mencatat langkah harian, PermataBankers dapat berkontribusi dalam menyelamatkan gajah Sumatra di Bukit Tigapuluh." />
 <meta name="author" content="PermataBank CSR" />
-<meta name="keywords" content="permata bank, csr, penghijauan, langkah hijau, emisi karbon, lingkungan, sustainability, pohon, melangkah penghijauan" />
+<meta name="keywords" content="permata bank, csr, penghijauan, langkah hijau, emisi karbon, lingkungan, sustainability, pohon" />
 <meta name="robots" content="index, follow" />
 <meta name="language" content="id" />
 <meta name="theme-color" content="#0061FE" />
 
-<title>{{ $title ?? 'Melangkah Penghijauan | PermataBank CSR' }}</title>
+<title>{{ $title ?? 'Move for Elephants' }}</title>
 
 <!-- FAVICONS -->
 <link rel="icon" href="/favicon.ico" sizes="any">
@@ -27,17 +27,17 @@
 <!-- OPEN GRAPH / FACEBOOK -->
 <meta property="og:type" content="website" />
 <meta property="og:url" content="{{ url()->current() }}" />
-<meta property="og:title" content="Melangkah Penghijauan | PermataBank CSR" />
-<meta property="og:description" content="Langkah kecilmu hari ini, hijaukan bumi esok hari. Ikuti gerakan Melangkah Penghijauan dari PermataBank." />
+<meta property="og:title" content='Ikuti Gerakan "Move for Elephants"' />
+<meta property="og:description" content="Hanya dengan menghitung dan mencatat langkah harian, PermataBankers dapat berkontribusi dalam menyelamatkan gajah Sumatra di Bukit Tigapuluh." />
 <meta property="og:image" content="{{ url('og-image.jpg') }}" />
 <meta property="og:image:width" content="300" />
 <meta property="og:image:height" content="300" />
-<meta property="og:site_name" content="Melangkah Penghijauan" />
+<meta property="og:site_name" content="Move for Elephants" />
 
 <!-- TWITTER CARD -->
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Melangkah Penghijauan | PermataBank CSR" />
-<meta name="twitter:description" content="Langkah kecilmu hari ini bisa menghijaukan bumi. Bergabunglah dalam gerakan PermataBank untuk masa depan yang berkelanjutan." />
+<meta name="twitter:title" content='Ikuti Gerakan "Move for Elephants"' />
+<meta name="twitter:description" content="Hanya dengan menghitung dan mencatat langkah harian, PermataBankers dapat berkontribusi dalam menyelamatkan gajah Sumatra di Bukit Tigapuluh." />
 <meta name="twitter:image" content="{{ url('og-image.jpg') }}" />
 
 <!-- FONTS -->
