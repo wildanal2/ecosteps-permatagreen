@@ -389,19 +389,19 @@ new #[Layout('components.layouts.app.header')]
                     <table class="w-full text-left text-gray-700 dark:text-zinc-300">
                         <thead>
                             <tr class="border-b text-sm text-gray-500 dark:text-zinc-400">
-                                <th class="py-2">Peringkat</th>
-                                <th>Nama</th>
-                                <th>Total Langkah</th>
-                                <th>CO₂e</th>
+                                <th class="p-2">#</th>
+                                <th class="p-2">Nama</th>
+                                <th class="p-2">Langkah</th>
+                                <th class="p-2">CO₂e</th>
                             </tr>
                         </thead>
                         <tbody class="text-sm">
                             @foreach($leaderboard as $index => $leader)
                                 <tr class="border-b dark:border-zinc-700">
-                                    <td class="py-2">#{{ $index + 1 }}</td>
-                                    <td>{{ Str::limit($leader->user->name, 20) }}</td>
-                                    <td>{{ number_format($leader->total_langkah, 0, ',', '.') }}</td>
-                                    <td>{{ number_format($leader->total_co2e_kg, 1, ',', '.') }} kg</td>
+                                    <td class="p-2">#{{ $index + 1 }}</td>
+                                    <td class="p-2">{{ Str::limit($leader->user->name, 20) }}</td>
+                                    <td class="p-2">{{ number_format($leader->total_langkah, 0, ',', '.') }}</td>
+                                    <td class="p-2">{{ number_format($leader->total_co2e_kg, 1, ',', '.') }} kg</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -417,19 +417,19 @@ new #[Layout('components.layouts.app.header')]
                 <table class="w-full text-left text-gray-700 dark:text-zinc-300">
                     <thead>
                         <tr class="border-b text-sm text-gray-500 dark:text-zinc-400">
-                            <th class="py-2">Peringkat</th>
-                            <th>Direktorat</th>
-                            <th>Total Langkah</th>
-                            <th>CO₂e</th>
+                            <th class="p-2">#</th>
+                            <th class="p-2">Direktorat</th>
+                            <th class="p-2">Langkah</th>
+                            <th class="p-2">CO₂e</th>
                         </tr>
                     </thead>
                     <tbody class="text-sm">
                         @foreach($topDirectorates as $index => $directorate)
                             <tr class="border-b dark:border-zinc-700">
-                                <td class="py-2">#{{ $index + 1 }}</td>
-                                <td>{{ \App\Enums\Directorate::from($directorate->directorate)->label() }}</td>
-                                <td>{{ number_format($directorate->total_langkah, 0, ',', '.') }}</td>
-                                <td>{{ number_format($directorate->total_co2e_kg, 1, ',', '.') }} kg</td>
+                                <td class="p-2">#{{ $index + 1 }}</td>
+                                <td class="p-2">{{ \App\Enums\Directorate::from($directorate->directorate)->label() }}</td>
+                                <td class="p-2">{{ number_format($directorate->total_langkah, 0, ',', '.') }}</td>
+                                <td class="p-2">{{ number_format($directorate->total_co2e_kg, 1, ',', '.') }} kg</td>
                             </tr>
                         @endforeach
                     </tbody>
