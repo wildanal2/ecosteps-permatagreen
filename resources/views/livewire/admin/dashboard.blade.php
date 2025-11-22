@@ -37,7 +37,6 @@ new #[Layout('components.layouts.app')]
                 ->whereNotNull('users.directorate')
                 ->groupBy('users.directorate')
                 ->orderByDesc('total_steps')
-                ->take(10)
                 ->get(),
             'topIndividuals' => User::select(
                     'users.name',
@@ -141,22 +140,16 @@ new #[Layout('components.layouts.app')]
             </div>
         </div>
 
-        <!-- Heatmap + Kinerja -->
+        <!-- Treemap + Kinerja -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Heatmap Direktorat -->
+            <!-- Treemap Direktorat -->
             <div class="bg-white dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 rounded-lg shadow p-6">
                 <div class="mb-4">
-                    <flux:heading size="lg">Heatmap Direktorat</flux:heading>
+                    <flux:heading size="lg">Treemap Direktorat</flux:heading>
                     <flux:subheading>Visualisasi performa direktorat teratas.</flux:subheading>
                 </div>
-                <div class="grid grid-cols-3 gap-2 text-white text-center font-medium text-sm">
-                    @php
-                        $branches = $directoratePerformance->take(6);
-                        $colors = ['bg-green-900', 'bg-green-700', 'bg-green-800', 'bg-green-500', 'bg-green-600', 'bg-green-500'];
-                    @endphp
-                    @foreach($branches as $index => $branch)
-                        <div class="{{ $colors[$index] ?? 'bg-green-600' }} p-4 rounded-lg">{{ $branch->directorate?->label() ?? '-' }}</div>
-                    @endforeach
+                <div style="height: 500px;" wire:ignore>
+                    <canvas id="treemapChart"></canvas>
                 </div>
             </div>
 
@@ -242,7 +235,8 @@ new #[Layout('components.layouts.app')]
 </div>
 
 @once
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-treemap@2.3.1"></script>
 @endonce
 
 <script>
@@ -363,5 +357,114 @@ new #[Layout('components.layouts.app')]
 
     // Re-initialize after Livewire navigation
     document.addEventListener('livewire:navigated', initActivityChart);
+})();
+</script>
+
+<script>
+(function() {
+    if (!window.treemapChartInstance) {
+        window.treemapChartInstance = null;
+    }
+
+    function initTreemapChart() {
+        const ctx = document.getElementById('treemapChart');
+        if (ctx) {
+            if (window.treemapChartInstance) {
+                window.treemapChartInstance.destroy();
+            }
+
+            const rawData = {!! json_encode($directoratePerformance->map(function($perf) {
+                return [
+                    'label' => $perf->directorate?->label() ?? '-',
+                    'value' => (int)$perf->total_steps,
+                    'co2e' => (float)$perf->co2e,
+                    'trees' => (float)$perf->trees
+                ];
+            })->values()) !!};
+            console.log(rawData);
+
+            const colors = [
+                'rgba(0, 73, 70, 0.9)',
+                'rgba(16, 185, 129, 0.9)',
+                'rgba(34, 197, 94, 0.9)',
+                'rgba(74, 222, 128, 0.9)',
+                'rgba(134, 239, 172, 0.9)',
+                'rgba(187, 247, 208, 0.8)',
+                'rgba(220, 252, 231, 0.8)',
+                'rgba(5, 150, 105, 0.8)',
+                'rgba(6, 95, 70, 0.8)',
+                'rgba(4, 120, 87, 0.8)'
+            ];
+
+            window.treemapChartInstance = new Chart(ctx.getContext('2d'), {
+                type: 'treemap',
+                data: {
+                    datasets: [{
+                        label: 'Direktorat Performance',
+                        tree: rawData,
+                        key: 'value',
+                        backgroundColor: (ctx) => {
+                            if (ctx.type !== 'data') return 'transparent';
+                            return colors[ctx.dataIndex % colors.length];
+                        },
+                        borderWidth: 2,
+                        borderColor: 'white',
+                        spacing: 1,
+                        labels: {
+                            display: true,
+                            align: 'center',
+                            position: 'middle',
+                            color: 'white',
+                            font: {
+                                size: 11,
+                                weight: 'bold'
+                            },
+                            formatter: (ctx) => {
+                                if (ctx.type !== 'data') return '';
+                                const label = ctx.raw._data.label;
+                                const words = label.split(' ');
+                                
+                                // Pecah label menjadi multi-line untuk keterbacaan
+                                if (words.length > 2) {
+                                    return [words.slice(0, 2).join(' '), words.slice(2).join(' ')];
+                                } else if (words.length === 2) {
+                                    return [words[0], words[1]];
+                                }
+                                return label;
+                            }
+                        }
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: (context) => {
+                                    return context[0].raw._data.label || 'Unknown';
+                                },
+                                label: (context) => {
+                                    const data = context.raw._data;
+                                    if (!data) return [];
+                                    return [
+                                        'Langkah: ' + (data.value || 0).toLocaleString('id-ID'),
+                                        'CO₂e: ' + (data.co2e || 0).toLocaleString('id-ID', {minimumFractionDigits: 1, maximumFractionDigits: 1}) + ' kg',
+                                        'Pohon: ' + (data.trees || 0).toLocaleString('id-ID', {minimumFractionDigits: 2, maximumFractionDigits: 2})
+                                    ];
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    initTreemapChart();
+    document.addEventListener('livewire:navigated', initTreemapChart);
 })();
 </script>
