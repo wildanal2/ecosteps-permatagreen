@@ -11,12 +11,36 @@ new #[Layout('components.layouts.app')] #[Title('Data Peserta')] class extends C
     use WithPagination;
 
     public $search = '';
+    public $sortBy = '';
+    public $sortDirection = 'desc';
 
     public function with(): array
     {
+        $query = User::where('user_level', 1)
+            ->when($this->search, fn($q) => $q->where('name', 'like', '%' . $this->search . '%'));
+
+        if ($this->sortBy) {
+            $query->leftJoin('user_statistics', 'users.id', '=', 'user_statistics.user_id')
+                ->select('users.*')
+                ->orderByRaw('COALESCE(user_statistics.' . $this->sortBy . ', 0) ' . $this->sortDirection);
+        } else {
+            $query->with('statistics');
+        }
+
         return [
-            'participants' => User::where('user_level', 1)->when($this->search, fn($q) => $q->where('name', 'like', '%' . $this->search . '%'))->with('statistics')->paginate(10),
+            'participants' => $query->with('statistics')->paginate(10),
         ];
+    }
+
+    public function sort($field)
+    {
+        if ($this->sortBy === $field) {
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortBy = $field;
+            $this->sortDirection = 'desc';
+        }
+        $this->resetPage();
     }
 
     public function updatingSearch()
@@ -68,18 +92,34 @@ new #[Layout('components.layouts.app')] #[Title('Data Peserta')] class extends C
                             <th
                                 class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                                 Direktorat</th>
-                            <th
-                                class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                                Total Langkah</th>
-                            <th
-                                class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                                CO₂e Dihindari</th>
-                            <th
-                                class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                                Est. Pohon</th>
-                            <th
-                                class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                                Jumlah Streak</th>
+                            <th wire:click="sort('total_langkah')"
+                                class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                                Total Langkah
+                                @if($sortBy === 'total_langkah')
+                                    <span class="ml-1">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                @endif
+                            </th>
+                            <th wire:click="sort('total_co2e_kg')"
+                                class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                                CO₂e Dihindari
+                                @if($sortBy === 'total_co2e_kg')
+                                    <span class="ml-1">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                @endif
+                            </th>
+                            <th wire:click="sort('total_pohon')"
+                                class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                                Est. Pohon
+                                @if($sortBy === 'total_pohon')
+                                    <span class="ml-1">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                @endif
+                            </th>
+                            <th wire:click="sort('current_streak')"
+                                class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                                Jumlah Streak
+                                @if($sortBy === 'current_streak')
+                                    <span class="ml-1">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                @endif
+                            </th>
                             <th
                                 class="px-6 py-3 text-center text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                                 Aksi</th>

@@ -15,13 +15,18 @@ new #[Layout('components.layouts.app')]
 
     public $searchParticipants = '';
     public $searchDirectorates = '';
+    public $sortByParticipants = 'total_langkah';
+    public $sortDirectionParticipants = 'desc';
+    public $sortByDirectorates = 'total_langkah';
+    public $sortDirectionDirectorates = 'desc';
 
     public function with(): array
     {
         // Subquery untuk ranking semua peserta
+        $orderColumn = $this->sortByParticipants === 'name' ? 'users.name' : 'user_statistics.' . $this->sortByParticipants;
         $rankedSubquery = User::where('user_level', 1)
             ->join('user_statistics', 'users.id', '=', 'user_statistics.user_id')
-            ->select('users.*', DB::raw('ROW_NUMBER() OVER (ORDER BY user_statistics.total_langkah DESC) as rank'));
+            ->select('users.*', DB::raw("ROW_NUMBER() OVER (ORDER BY {$orderColumn} {$this->sortDirectionParticipants}) as rank"));
 
         // Query dari subquery dengan filter
         $participantsQuery = DB::table(DB::raw("({$rankedSubquery->toSql()}) as ranked_users"))
@@ -45,8 +50,8 @@ new #[Layout('components.layouts.app')]
 
         $directoratesQuery = DB::table(DB::raw("({$directoratesSubquery->toSql()}) as sub"))
             ->mergeBindings($directoratesSubquery->getQuery())
-            ->select('*', DB::raw('ROW_NUMBER() OVER (ORDER BY total_langkah DESC) as rank'))
-            ->orderByDesc('total_langkah');
+            ->select('*', DB::raw("ROW_NUMBER() OVER (ORDER BY {$this->sortByDirectorates} {$this->sortDirectionDirectorates}) as rank"))
+            ->orderBy($this->sortByDirectorates, $this->sortDirectionDirectorates);
 
         if ($this->searchDirectorates) {
             $directoratesQuery->where('directorate', 'like', '%' . $this->searchDirectorates . '%');
@@ -75,6 +80,28 @@ new #[Layout('components.layouts.app')]
 
     public function updatingSearchDirectorates()
     {
+        $this->resetPage('directoratesPage');
+    }
+
+    public function sortParticipants($field)
+    {
+        if ($this->sortByParticipants === $field) {
+            $this->sortDirectionParticipants = $this->sortDirectionParticipants === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortByParticipants = $field;
+            $this->sortDirectionParticipants = 'desc';
+        }
+        $this->resetPage('participantsPage');
+    }
+
+    public function sortDirectorates($field)
+    {
+        if ($this->sortByDirectorates === $field) {
+            $this->sortDirectionDirectorates = $this->sortDirectionDirectorates === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortByDirectorates = $field;
+            $this->sortDirectionDirectorates = 'desc';
+        }
         $this->resetPage('directoratesPage');
     }
 
@@ -115,11 +142,31 @@ new #[Layout('components.layouts.app')]
                     <thead class="bg-zinc-50 dark:bg-zinc-900">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Peringkat</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Nama</th>
+                            <th wire:click="sortParticipants('name')" class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                                Nama
+                                @if($sortByParticipants === 'name')
+                                    <span class="ml-1">{{ $sortDirectionParticipants === 'asc' ? '↑' : '↓' }}</span>
+                                @endif
+                            </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Direktorat</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Total Langkah</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">CO₂e Dihindari</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Runtutan</th>
+                            <th wire:click="sortParticipants('total_langkah')" class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                                Total Langkah
+                                @if($sortByParticipants === 'total_langkah')
+                                    <span class="ml-1">{{ $sortDirectionParticipants === 'asc' ? '↑' : '↓' }}</span>
+                                @endif
+                            </th>
+                            <th wire:click="sortParticipants('total_co2e_kg')" class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                                CO₂e Dihindari
+                                @if($sortByParticipants === 'total_co2e_kg')
+                                    <span class="ml-1">{{ $sortDirectionParticipants === 'asc' ? '↑' : '↓' }}</span>
+                                @endif
+                            </th>
+                            <th wire:click="sortParticipants('current_streak')" class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                                Runtutan
+                                @if($sortByParticipants === 'current_streak')
+                                    <span class="ml-1">{{ $sortDirectionParticipants === 'asc' ? '↑' : '↓' }}</span>
+                                @endif
+                            </th>
                         </tr>
                     </thead>
                     <tbody class="bg-white dark:bg-zinc-800 divide-y divide-zinc-200 dark:divide-zinc-700">
@@ -136,7 +183,11 @@ new #[Layout('components.layouts.app')]
                                         {{ $participant->rank }}
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ $participant->name }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <a href="{{ route('admin.detail-peserta', $participant->id) }}" class="text-[#004444] hover:text-[#006666] dark:text-[#00aa88] dark:hover:text-[#00cc99] font-medium hover:underline">
+                                        {{ $participant->name }}
+                                    </a>
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ $participant->directorate?->label() ?? '-' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($participant->statistics->total_langkah ?? 0, 0, ',', '.') }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($participant->statistics->total_co2e_kg ?? 0, 2, ',', '.') }} kg</td>
@@ -169,9 +220,24 @@ new #[Layout('components.layouts.app')]
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Peringkat</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Direktorat</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Total Langkah</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">CO₂e Dihindari</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Jumlah Peserta</th>
+                            <th wire:click="sortDirectorates('total_langkah')" class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                                Total Langkah
+                                @if($sortByDirectorates === 'total_langkah')
+                                    <span class="ml-1">{{ $sortDirectionDirectorates === 'asc' ? '↑' : '↓' }}</span>
+                                @endif
+                            </th>
+                            <th wire:click="sortDirectorates('total_co2e_kg')" class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                                CO₂e Dihindari
+                                @if($sortByDirectorates === 'total_co2e_kg')
+                                    <span class="ml-1">{{ $sortDirectionDirectorates === 'asc' ? '↑' : '↓' }}</span>
+                                @endif
+                            </th>
+                            <th wire:click="sortDirectorates('jumlah_peserta')" class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                                Jumlah Peserta
+                                @if($sortByDirectorates === 'jumlah_peserta')
+                                    <span class="ml-1">{{ $sortDirectionDirectorates === 'asc' ? '↑' : '↓' }}</span>
+                                @endif
+                            </th>
                         </tr>
                     </thead>
                     <tbody class="bg-white dark:bg-zinc-800 divide-y divide-zinc-200 dark:divide-zinc-700">

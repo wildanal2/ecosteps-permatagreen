@@ -108,12 +108,19 @@ new #[Layout('components.layouts.app')] #[Title('Daily Report Admin')] class ext
 
             app(ReportCalculationService::class)->recalculate($report->id, $this->validSteps[$reportId]);
 
-            flash()->success('Laporan berhasil diverifikasi');
-            unset($this->validSteps[$reportId], $this->appNames[$reportId]);
+            // Update report in existing array
+            foreach ($this->reports as $key => $rep) {
+                if ($rep['id'] === $reportId) {
+                    $this->reports[$key]['verified_id'] = VerifiedBy::ADMIN;
+                    $this->reports[$key]['langkah'] = $this->validSteps[$reportId];
+                    break;
+                }
+            }
 
-            $this->reports = [];
-            $this->page = 1;
-            $this->loadReports();
+            unset($this->validSteps[$reportId], $this->appNames[$reportId]);
+            
+            flash()->success('Laporan berhasil diverifikasi');
+            $this->js("Flux.modal('verify-modal-{$reportId}').close()");
         }
     }
 };

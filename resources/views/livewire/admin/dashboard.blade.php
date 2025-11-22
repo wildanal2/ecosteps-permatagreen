@@ -381,7 +381,6 @@ new #[Layout('components.layouts.app')]
                     'trees' => (float)$perf->trees
                 ];
             })->values()) !!};
-            console.log(rawData);
 
             const colors = [
                 'rgba(0, 73, 70, 0.9)',
@@ -423,7 +422,7 @@ new #[Layout('components.layouts.app')]
                                 if (ctx.type !== 'data') return '';
                                 const label = ctx.raw._data.label;
                                 const words = label.split(' ');
-                                
+
                                 // Pecah label menjadi multi-line untuk keterbacaan
                                 if (words.length > 2) {
                                     return [words.slice(0, 2).join(' '), words.slice(2).join(' ')];
