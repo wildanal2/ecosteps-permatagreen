@@ -37,13 +37,7 @@ class OcrResultController extends Controller
             $extractedData = json_decode($extractedData, true) ?? [];
         }
 
-        $detectAplicationId = match($appClass) {
-            'Apple Health' => WalkAppSupport::APPLE_HEALTH,
-            'Google Fit' => WalkAppSupport::GOOGLE_FIT,
-            'Huawei Health' => WalkAppSupport::HUAWEI_HEALTH,
-            'Samsung Health' => WalkAppSupport::SAMSUNG_HEALTH,
-            default => WalkAppSupport::OTHER,
-        };
+        $detectAplicationId = WalkAppSupport::fromAppClass($appClass);
 
         try {
             $ocrLog = OcrProcessLog::create([
