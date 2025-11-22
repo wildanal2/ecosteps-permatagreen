@@ -26,6 +26,9 @@
                     <flux:navlist.item icon="check-badge" :href="route('admin.verifikasi-bukti')"
                         :current="request()->routeIs('admin.verifikasi-bukti')" wire:navigate>Verifikasi Bukti
                     </flux:navlist.item>
+                    <flux:navlist.item icon="document-text" :href="route('admin.daily-report')"
+                        :current="request()->routeIs('admin.daily-report')" wire:navigate>Daily Report
+                    </flux:navlist.item>
                     <flux:navlist.item icon="trophy" :href="route('admin.leaderboard')"
                         :current="request()->routeIs('admin.leaderboard')" wire:navigate>Leaderboard</flux:navlist.item>
                 </flux:navlist.group>
