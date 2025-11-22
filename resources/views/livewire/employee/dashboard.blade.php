@@ -194,12 +194,12 @@ new #[Layout('components.layouts.app.header')]
                     <flux:icon.exclamation-triangle class="w-5 h-5" />
                     <span>Anda belum mengirim laporan langkah hari ini</span>
                 </div>
-            @elseif($todayReport && $todayReport->status_verifikasi->value === 1)
+            @elseif($todayReport && $todayReport->status_verifikasi === \App\Enums\StatusVerifikasi::PENDING)
                 <div class="mt-3 rounded-xl bg-blue-100 text-blue-700 px-4 py-3 flex items-center gap-2" wire:poll.5s="$refresh">
                     <flux:icon.information-circle class="w-5 h-5" />
                     <span>Laporan Anda sedang dalam proses verifikasi {{ $todayReport->manual_verification_requested ? "oleh Admin":"sistem" }}</span>
                 </div>
-            @elseif($todayReport && $todayReport->status_verifikasi->value === 3)
+            @elseif($todayReport && $todayReport->status_verifikasi === \App\Enums\StatusVerifikasi::DITOLAK)
                 <div class="mt-3 rounded-xl flex justify-between items-center bg-red-100 text-red-700 px-4 py-3">
                     <div class="flex items-center gap-2 mb-2">
                         <flux:icon.x-circle class="w-5 h-5" />
@@ -251,7 +251,7 @@ new #[Layout('components.layouts.app.header')]
                             {{ $hasReportedToday ? 'Perbarui Laporan' : 'Kirim Laporan Hari Ini' }}
                         </button>
                     </flux:modal.trigger>
-                    @if($todayReport && $todayReport->status_verifikasi->value === 2)
+                    @if($todayReport && $todayReport->status_verifikasi === \App\Enums\StatusVerifikasi::DIVERIFIKASI)
                     <flux:modal.trigger name="appeal-confirmation" style="min-height:48px">
                         <button
                             class="px-2 bg-gray-100 py-3 rounded-xl text-gray-700 font-semibold text-base hover:bg-gray-200 transition flex items-center justify-center gap-2 whitespace-nowrap"

@@ -60,6 +60,7 @@ class ReportCalculationService
         while (true) {
             $report = DailyReport::where('user_id', $userId)
                 ->where('tanggal_laporan', $currentDate->toDateString())
+                ->whereRaw('DATE(created_at) = tanggal_laporan')
                 ->where('status_verifikasi', StatusVerifikasi::DIVERIFIKASI)
                 ->where('langkah', '>', 0)
                 ->first();

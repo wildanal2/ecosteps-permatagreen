@@ -14,6 +14,26 @@ new #[Layout('components.layouts.app.header')]
     public $search = '';
     public $weekOffset = 0;
 
+    protected $listeners = ['refresh-riwayat' => '$refresh'];
+
+    public function requestManualVerification($reportId)
+    {
+        $report = DailyReport::where('id', $reportId)
+            ->where('user_id', auth()->id())
+            ->first();
+
+        if ($report && $report->status_verifikasi === \App\Enums\StatusVerifikasi::DIVERIFIKASI) {
+            $report->update([
+                'status_verifikasi' => \App\Enums\StatusVerifikasi::PENDING,
+                'manual_verification_requested' => true,
+                'manual_verification_requested_at' => now(),
+            ]);
+            $this->dispatch('close-modal', name: 'appeal-confirmation-' . $reportId);
+            $this->dispatch('close-modal', name: 'photo-' . $reportId);
+            flash()->success('Banding berhasil diajukan!');
+        }
+    }
+
     public function with(): array
     {
         $userId = auth()->id();
@@ -176,12 +196,6 @@ new #[Layout('components.layouts.app.header')]
                     {{-- Skip tanggal sebelum event dimulai --}}
                 @elseif($report)
                     @php
-                        $statusConfig = match($report->status_verifikasi->value) {
-                            1 => ['text' => 'Proses Verifikasi', 'color' => 'text-amber-500', 'badge' => 'bg-amber-100 dark:bg-amber-900/40'],
-                            2 => ['text' => 'Diverifikasi', 'color' => 'text-emerald-500', 'badge' => 'bg-emerald-100 dark:bg-emerald-900/40'],
-                            3 => ['text' => 'Tidak Valid', 'color' => 'text-red-500', 'badge' => 'bg-red-100 dark:bg-red-900/40'],
-                            default => ['text' => 'Proses Verifikasi', 'color' => 'text-amber-500', 'badge' => 'bg-amber-100 dark:bg-amber-900/40'],
-                        };
                         $isToday = Carbon::parse($report->tanggal_laporan)->isToday();
                     @endphp
                     <div class="rounded-2xl border {{ $isToday ? 'border-[#004646]' : 'border-gray-200 dark:border-zinc-700' }} bg-white dark:bg-zinc-800 {{ $isToday ? 'shadow-[0_0_20px_rgba(0,70,70,0.4)]' : 'shadow-sm' }} p-4 flex flex-col justify-between">
@@ -196,8 +210,8 @@ new #[Layout('components.layouts.app.header')]
                                     </span>
                                 @endif
                             </div>
-                            <span class="text-xs px-2 py-1 rounded-full {{ $statusConfig['badge'] }} {{ $statusConfig['color'] }} font-medium">
-                                {{ $statusConfig['text'] }}
+                            <span class="text-xs px-2 py-1 rounded-full {{ $report->status_verifikasi->badgeClass() }} {{ $report->status_verifikasi->textColor() }} font-medium">
+                                {{ $report->status_verifikasi->label() }}
                             </span>
                         </div>
 
@@ -220,41 +234,86 @@ new #[Layout('components.layouts.app.header')]
                             </div>
                         </div>
 
+                        <div class="flex gap-2">
+                            @if($report->bukti_screenshot)
+                                <flux:modal.trigger name="photo-{{ $report->id }}" class="flex-1 border border-blue-500 text-blue-600 dark:text-blue-400 dark:border-blue-400 py-2 rounded text-sm font-medium hover:bg-blue-50 dark:hover:bg-blue-900/30 flex items-center justify-center gap-2 transition">
+                                    <i class="ph-fill ph-file-image"></i>
+                                    Lihat Foto
+                                </flux:modal.trigger>
+                            @else
+                                <div class="flex-1 border border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-500 py-2 rounded text-sm font-medium text-center">
+                                    Tidak ada foto
+                                </div>
+                            @endif
+                            
+                            @if($report->status_verifikasi->canUpdate())
+                                <livewire:employee.riwayat-report-upload-component :selectedDate="$report->tanggal_laporan" :key="'upload-'.$report->id" />
+                                <flux:modal.trigger name="upload-riwayat-{{ $report->tanggal_laporan }}" class="border border-green-500 text-green-600 dark:text-green-400 dark:border-green-400 py-2 px-3 rounded text-sm font-medium hover:bg-green-50 dark:hover:bg-green-900/30 flex items-center justify-center gap-2 transition">
+                                    <i class="ph-fill ph-arrow-clockwise"></i>
+                                    Perbarui
+                                </flux:modal.trigger>
+                            @endif
+                        </div>
+
                         @if($report->bukti_screenshot)
                             <flux:modal name="photo-{{ $report->id }}" class="w-full max-w-5xl">
                                 <div class="grid grid-cols-2 gap-4 p-4">
                                     <div class="flex items-center justify-center">
                                         <img src="{{ $report->bukti_screenshot }}" alt="Bukti Screenshot" class="w-auto max-h-[80vh] rounded-lg cursor-pointer hover:opacity-90 transition">
                                     </div>
-                                    <div class="space-y-3 p-3">
-                                        @if($report->status_verifikasi->value == 2)
-                                            <div class="shadow p-3 rounded border border-gray-50 flex flex-col">
+                                    <div class="space-y-3 p-3 flex flex-col h-full">
+                                        <div class="flex-1">
+                                            @if($report->status_verifikasi === \App\Enums\StatusVerifikasi::DIVERIFIKASI)
+                                                <div class="shadow p-3 rounded border border-gray-50 flex flex-col">
+                                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Hasil Analisa Sistem</h3>
+                                                    @php $ocr = json_decode($report->ocr_result, true); @endphp
+                                                    @if($ocr)
+                                                        <div class="space-y-2 text-sm">
+                                                            @if(isset($ocr['steps']))<div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">Steps:</span><span class="font-medium text-gray-900 dark:text-gray-100">{{ number_format($ocr['steps']) }}</span></div>@endif
+                                                        </div>
+                                                    @else
+                                                        <p class="text-gray-500 dark:text-gray-400 text-sm">Tidak ada data analisa</p>
+                                                    @endif
+                                                </div>
+                                            @else
                                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Hasil Analisa Sistem</h3>
-                                                @php $ocr = json_decode($report->ocr_result, true); @endphp
-                                                @if($ocr)
-                                                    <div class="space-y-2 text-sm">
-                                                        @if(isset($ocr['steps']))<div class="flex justify-between"><span class="text-gray-600 dark:text-gray-400">Steps:</span><span class="font-medium text-gray-900 dark:text-gray-100">{{ number_format($ocr['steps']) }}</span></div>@endif
-                                                    </div>
-                                                @else
-                                                    <p class="text-gray-500 dark:text-gray-400 text-sm">Tidak ada data analisa</p>
-                                                @endif
-                                            </div>
-                                        @else
-                                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Hasil Analisa Sistem</h3>
-                                            <p class="text-gray-500 dark:text-gray-400 text-sm">Data Tidak valid</p>
+                                                <p class="text-gray-500 dark:text-gray-400 text-sm">Data Tidak valid</p>
+                                            @endif
+                                        </div>
+                                        
+                                        @if($report->status_verifikasi === \App\Enums\StatusVerifikasi::DIVERIFIKASI)
+                                            <flux:modal.trigger name="appeal-confirmation-{{ $report->id }}" class="w-full">
+                                                <button class="w-full px-4 py-2 bg-gray-100 rounded-lg text-gray-700 font-semibold hover:bg-gray-200 transition flex items-center justify-center gap-2">
+                                                    <i class="ph-fill ph-arrows-clockwise"></i>
+                                                    Ajukan Banding
+                                                </button>
+                                            </flux:modal.trigger>
                                         @endif
                                     </div>
                                 </div>
                             </flux:modal>
 
-                            <flux:modal.trigger name="photo-{{ $report->id }}" class="w-full border border-blue-500 text-blue-600 dark:text-blue-400 dark:border-blue-400 py-2 rounded text-sm font-medium hover:bg-blue-50 dark:hover:bg-blue-900/30 flex items-center justify-center gap-2 transition">
-                                <i class="ph-fill ph-file-image"></i>
-                                Lihat Foto
-                            </flux:modal.trigger>
-                        @else
-                            <div class="w-full border border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-500 py-2 rounded text-sm font-medium text-center">
-                                Tidak ada foto
-                            </div>
+                            {{-- Modal Konfirmasi Banding --}}
+                            @if($report->status_verifikasi === \App\Enums\StatusVerifikasi::DIVERIFIKASI)
+                                <flux:modal name="appeal-confirmation-{{ $report->id }}" class="min-w-[22rem]">
+                                    <div class="space-y-6">
+                                        <div>
+                                            <flux:heading size="lg">Ajukan Banding Verifikasi?</flux:heading>
+                                            <flux:text class="mt-2">
+                                                Anda akan mengajukan banding untuk laporan yang sudah terverifikasi.<br>
+                                                Laporan akan dikembalikan ke status pending untuk ditinjau ulang oleh admin.
+                                            </flux:text>
+                                        </div>
+                                        <div class="flex gap-2">
+                                            <flux:spacer />
+                                            <flux:modal.close>
+                                                <flux:button variant="ghost">Batal</flux:button>
+                                            </flux:modal.close>
+                                            <flux:button wire:click="requestManualVerification({{ $report->id }})" variant="primary">Ajukan Banding</flux:button>
+                                        </div>
+                                    </div>
+                                </flux:modal>
+                            @endif
                         @endif
                     </div>
                 @else
@@ -262,18 +321,28 @@ new #[Layout('components.layouts.app.header')]
                         $isFuture = $currentDate->isFuture();
                         $isToday = $currentDate->isToday();
                     @endphp
-                    <div class="rounded-2xl border {{ $isToday ? 'border-[#004646]' : 'border-gray-200 dark:border-zinc-700' }} bg-white dark:bg-zinc-800 {{ $isToday ? 'shadow-[0_0_10px_rgba(0,70,70,0.4)]' : 'shadow-sm' }} p-8 text-center">
-                        <i class="ph {{ $isFuture ? 'ph-clock' : 'ph-file-x' }} text-4xl text-gray-400 dark:text-zinc-600 mb-2"></i>
-                        @if($isToday)
-                            <br>
-                            <p class="inline-block px-3 py-1 rounded-full bg-[#004646] text-white text-xs font-semibold">
-                                Hari ini
+                    <div class="rounded-2xl border {{ $isToday ? 'border-[#004646]' : 'border-gray-200 dark:border-zinc-700' }} bg-white dark:bg-zinc-800 {{ $isToday ? 'shadow-[0_0_10px_rgba(0,70,70,0.4)]' : 'shadow-sm' }} p-6 flex flex-col justify-between">
+                        <div class="text-center mb-4">
+                            <i class="ph {{ $isFuture ? 'ph-clock' : 'ph-file-x' }} text-4xl text-gray-400 dark:text-zinc-600 mb-2"></i>
+                            @if($isToday)
+                                <br>
+                                <p class="inline-block px-3 py-1 rounded-full bg-[#004646] text-white text-xs font-semibold">
+                                    Hari ini
+                                </p>
+                            @endif
+                            <p class="text-gray-600 dark:text-zinc-400 font-medium flex items-center justify-center gap-2">
+                                {{ $isFuture ? 'Coming Soon' : 'Tidak ada data' }}
                             </p>
+                            <p class="text-gray-500 dark:text-zinc-500 text-xs mt-1">{{ $currentDate->format('d M Y') }}</p>
+                        </div>
+                        
+                        @if(!$isFuture)
+                            <livewire:employee.riwayat-report-upload-component :selectedDate="$currentDate->format('Y-m-d')" :key="'upload-empty-'.$currentDate->format('Y-m-d')" />
+                            <flux:modal.trigger name="upload-riwayat-{{ $currentDate->format('Y-m-d') }}" class="w-full border border-blue-500 text-blue-600 dark:text-blue-400 dark:border-blue-400 py-2 rounded text-sm font-medium hover:bg-blue-50 dark:hover:bg-blue-900/30 flex items-center justify-center gap-2 transition">
+                                <i class="ph-fill ph-upload-simple"></i>
+                                {{ $isToday ? 'Kirim Laporan Hari Ini' : 'Kirim Laporan' }}
+                            </flux:modal.trigger>
                         @endif
-                        <p class="text-gray-600 dark:text-zinc-400 font-medium flex items-center justify-center gap-2">
-                            {{ $isFuture ? 'Coming Soon' : 'Tidak ada data' }}
-                        </p>
-                        <p class="text-gray-500 dark:text-zinc-500 text-xs mt-1">{{ $currentDate->format('d M Y') }}</p>
                     </div>
                 @endif
             @endforeach
@@ -367,6 +436,10 @@ createChart(@json($chartLabels), @json($chartDates), @json($chartSteps));
 
 $wire.on('chart-update', (event) => {
     createChart(event[0].labels, event[0].dates, event[0].steps);
+});
+
+$wire.on('refresh-riwayat', () => {
+    location.reload();
 });
 </script>
 @endscript
