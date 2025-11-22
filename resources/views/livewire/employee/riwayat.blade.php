@@ -61,8 +61,13 @@ new #[Layout('components.layouts.app.header')]
 
     public function nextWeek()
     {
-        $this->weekOffset++;
-        $this->updateChart();
+        $eventStartDate = Carbon::parse('2025-11-21');
+        $nextWeekStart = now()->subWeeks($this->weekOffset + 1)->startOfWeek();
+        
+        if ($nextWeekStart->greaterThanOrEqualTo($eventStartDate)) {
+            $this->weekOffset++;
+            $this->updateChart();
+        }
     }
 
     public function prevWeek()
@@ -136,6 +141,12 @@ new #[Layout('components.layouts.app.header')]
             <button
                 wire:click="nextWeek"
                 wire:loading.attr="disabled"
+                @php
+                    $eventStartDate = \Carbon\Carbon::parse('2025-11-21');
+                    $nextWeekStart = now()->subWeeks($this->weekOffset + 1)->startOfWeek();
+                    $canGoBack = $nextWeekStart->greaterThanOrEqualTo($eventStartDate);
+                @endphp
+                @if(!$canGoBack) disabled @endif
                 class="flex items-center justify-center px-3 py-2 sm:px-4 sm:py-2 bg-gray-100 dark:bg-zinc-700 rounded-md shadow transition-all hover:bg-gray-200 dark:hover:bg-zinc-600 disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:cursor-not-allowed w-full sm:w-auto">
                 <flux:icon.chevron-left class="w-4 h-4 mr-1" />
                 <span class="font-medium text-gray-700 dark:text-zinc-300 text-sm sm:text-base">Minggu Lalu</span>
@@ -156,7 +167,14 @@ new #[Layout('components.layouts.app.header')]
         {{-- List Laporan --}}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             @foreach ($reports as $index => $report)
-                @if($report)
+                @php
+                    $currentDate = $startOfWeek->copy()->addDays($index);
+                    $eventStartDate = \Carbon\Carbon::parse('2025-11-21');
+                    $isBeforeEvent = $currentDate->lt($eventStartDate);
+                @endphp
+                @if($isBeforeEvent)
+                    {{-- Skip tanggal sebelum event dimulai --}}
+                @elseif($report)
                     @php
                         $statusConfig = match($report->status_verifikasi->value) {
                             1 => ['text' => 'Proses Verifikasi', 'color' => 'text-amber-500', 'badge' => 'bg-amber-100 dark:bg-amber-900/40'],
@@ -241,7 +259,6 @@ new #[Layout('components.layouts.app.header')]
                     </div>
                 @else
                     @php
-                        $currentDate = $startOfWeek->copy()->addDays($index);
                         $isFuture = $currentDate->isFuture();
                         $isToday = $currentDate->isToday();
                     @endphp

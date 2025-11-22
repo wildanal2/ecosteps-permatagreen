@@ -31,13 +31,15 @@ new #[Layout('components.layouts.app.header')]
             ->whereDate('tanggal_laporan', today())
             ->first();
 
-        if ($todayReport && $todayReport->status_verifikasi->value === 3) {
+        if ($todayReport ) {
+            // && $todayReport->status_verifikasi->value === 3
             $todayReport->update([
                 'status_verifikasi' => \App\Enums\StatusVerifikasi::PENDING,
                 'manual_verification_requested' => true,
                 'manual_verification_requested_at' => now(),
             ]);
 
+            $this->dispatch('close-modal');
             flash()->info('Permintaan verifikasi manual telah diajukan. Mohon tunggu admin untuk memverifikasi.');
         }
     }
@@ -242,12 +244,23 @@ new #[Layout('components.layouts.app.header')]
                     langkah
                 </div>
 
-                <flux:modal.trigger name="upload-harian">
-                    <button class="w-full bg-blue-600 text-white py-2 rounded-xl font-semibold hover:bg-blue-700 transition flex items-center justify-center gap-2">
-                        <i class="ph-fill ph-footprints"></i>
-                        {{ $hasReportedToday ? 'Perbarui Laporan' : 'Kirim Laporan Hari Ini' }}
-                    </button>
-                </flux:modal.trigger>
+                <div class="flex gap-2">
+                    <flux:modal.trigger name="upload-harian" class="flex-1">
+                        <button class="w-full bg-blue-600 text-white py-2 rounded-xl font-semibold hover:bg-blue-700 transition flex items-center justify-center gap-2 whitespace-nowrap">
+                            <i class="ph-fill ph-footprints"></i>
+                            {{ $hasReportedToday ? 'Perbarui Laporan' : 'Kirim Laporan Hari Ini' }}
+                        </button>
+                    </flux:modal.trigger>
+                    @if($todayReport && $todayReport->status_verifikasi->value === 2)
+                    <flux:modal.trigger name="appeal-confirmation" style="min-height:48px">
+                        <button
+                            class="px-2 bg-gray-100 py-3 rounded-xl text-gray-700 font-semibold text-base hover:bg-gray-200 transition flex items-center justify-center gap-2 whitespace-nowrap"
+                        >
+                            <i class="ph-fill ph-arrows-clockwise"></i>Ajukan banding
+                        </button>
+                    </flux:modal.trigger>
+                    @endif
+                </div>
                 <a
                     href="{{ route('riwayat') }}"
                     wire:navigate
@@ -444,6 +457,29 @@ new #[Layout('components.layouts.app.header')]
     </div>
 
     <livewire:employee.report-upload-component />
+
+    <flux:modal name="appeal-confirmation" class="min-w-[22rem]">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">Ajukan Banding Verifikasi?</flux:heading>
+
+                <flux:text class="mt-2">
+                    Anda akan mengajukan banding untuk laporan yang sudah terverifikasi.<br>
+                    Laporan akan dikembalikan ke status pending untuk ditinjau ulang oleh admin.
+                </flux:text>
+            </div>
+
+            <div class="flex gap-2">
+                <flux:spacer />
+
+                <flux:modal.close>
+                    <flux:button variant="ghost">Batal</flux:button>
+                </flux:modal.close>
+
+                <flux:button wire:click="requestManualVerification" variant="primary">Ajukan Banding</flux:button>
+            </div>
+        </div>
+    </flux:modal>
 
     <x-platform-footer />
 
