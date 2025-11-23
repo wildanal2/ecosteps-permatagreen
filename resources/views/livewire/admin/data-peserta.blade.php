@@ -129,7 +129,9 @@ new #[Layout('components.layouts.app')] #[Title('Data Peserta')] class extends C
                         @forelse($participants as $participant)
                             <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-700">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">
+                                    <a href="{{ route('admin.detail-peserta', $participant->id) }}" class="text-[#004444] hover:text-[#006666] dark:text-[#00aa88] dark:hover:text-[#00cc99] font-medium hover:underline">
                                     {{ $participant->name }}</td>
+                                    </a>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">
                                     {{ $participant->directorate->label() ?? '-' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">

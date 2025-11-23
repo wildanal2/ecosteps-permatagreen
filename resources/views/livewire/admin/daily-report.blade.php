@@ -72,10 +72,19 @@ new #[Layout('components.layouts.app')] #[Title('Daily Report Admin')] class ext
 
     public function approveReport($reportId)
     {
-        $this->validate([
-            "validSteps.{$reportId}" => 'required|integer|min:0|max:50000',
-            "appNames.{$reportId}" => 'nullable|string|max:255',
-        ]);
+        $this->validate(
+            [
+                "validSteps.{$reportId}" => 'required|integer|min:0|max:100000',
+                "appNames.{$reportId}" => 'nullable|string|max:255',
+            ],
+            [
+                "validSteps.{$reportId}.required" => 'Jumlah langkah wajib diisi',
+                "validSteps.{$reportId}.integer" => 'Jumlah langkah harus berupa angka',
+                "validSteps.{$reportId}.min" => 'Jumlah langkah minimal 0',
+                "validSteps.{$reportId}.max" => 'Jumlah langkah maksimal 100.000',
+                "appNames.{$reportId}.max" => 'Nama aplikasi maksimal 255 karakter',
+            ]
+        );
 
         $report = DailyReport::find($reportId);
         if ($report) {
@@ -83,8 +92,8 @@ new #[Layout('components.layouts.app')] #[Title('Daily Report Admin')] class ext
 
             if ($report->status_verifikasi === StatusVerifikasi::DIVERIFIKASI && $report->verified_by) {
                 $verifiedBy = $report->verified_id == VerifiedBy::SISTEM ? 'sistem OCR' : 'Admin lain';
-                flash()->warning("Laporan sudah diverifikasi oleh {$verifiedBy}");
-                return;
+                flash()->warning("Laporan sudah diverifikasi oleh {$verifiedBy} Anda tetap merubahnya");
+                // return;
             }
 
             ManualVerificationLog::create([
@@ -118,7 +127,7 @@ new #[Layout('components.layouts.app')] #[Title('Daily Report Admin')] class ext
             }
 
             unset($this->validSteps[$reportId], $this->appNames[$reportId]);
-            
+
             flash()->success('Laporan berhasil diverifikasi');
             $this->js("Flux.modal('verify-modal-{$reportId}').close()");
         }
@@ -251,24 +260,24 @@ new #[Layout('components.layouts.app')] #[Title('Daily Report Admin')] class ext
                                                 </div>
                                             </div>
 
-                                            <div>
+                                            <div wire:key="validSteps-{{ $report['id'] }}">
                                                 <flux:label>Jumlah Langkah Valid <span class="text-red-500">*</span>
                                                 </flux:label>
-                                                <flux:input wire:model="validSteps.{{ $report['id'] }}" type="number"
+                                                <flux:input wire:model.blur="validSteps.{{ $report['id'] }}" type="number"
                                                     min="0" placeholder="Masukkan jumlah langkah yang valid"
                                                     class="mt-1" />
-                                                @error("validSteps.{$report['id']}")
-                                                    <flux:error>{{ $message }}</flux:error>
+                                                @error('validSteps.' . $report['id'])
+                                                    <div class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</div>
                                                 @enderror
                                             </div>
 
-                                            <div>
+                                            <div wire:key="appNames-{{ $report['id'] }}">
                                                 <flux:label>Nama Aplikasi <span
                                                         class="text-zinc-400 text-xs">(Opsional)</span></flux:label>
-                                                <flux:input wire:model="appNames.{{ $report['id'] }}" type="text"
+                                                <flux:input wire:model.blur="appNames.{{ $report['id'] }}" type="text"
                                                     placeholder="Contoh: Google Fit, Samsung Health" class="mt-1" />
-                                                @error("appNames.{$report['id']}")
-                                                    <flux:error>{{ $message }}</flux:error>
+                                                @error('appNames.' . $report['id'])
+                                                    <div class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</div>
                                                 @enderror
                                             </div>
 

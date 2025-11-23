@@ -39,6 +39,7 @@ new #[Layout('components.layouts.app')]
                 ->orderByDesc('total_steps')
                 ->get(),
             'topIndividuals' => User::select(
+                    'users.id',
                     'users.name',
                     'users.directorate',
                     'user_statistics.total_co2e_kg',
@@ -219,7 +220,11 @@ new #[Layout('components.layouts.app')]
                                         {{ $index + 1 }}
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ $individual->name }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">
+                                    <a href="{{ route('admin.detail-peserta', $individual->id??0 ) }}" class="text-[#004444] hover:text-[#006666] dark:text-[#00aa88] dark:hover:text-[#00cc99] font-medium hover:underline">
+                                        {{ $individual->name }}
+                                    </a>
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ $individual->directorate?->label() ?? '-' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($individual->total_langkah) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($individual->total_co2e_kg, 2) }} kg</td>
