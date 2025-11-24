@@ -13,12 +13,16 @@ class ReportCalculationService
 
         // 1. Konversi langkah ke jarak (km)
         $jarak = ($steps * 0.75) / 1000;
-        
+
         // 2. Perhitungan Emisi (kg CO2e)
         $co2e = round($jarak * EmissionFactor::default()->getValue(), 2);
-        
+
         // 3. Konversi Pohon
-        $pohon = round($co2e / TreeCo2Absorption::default()->getValue(), 2);
+        // Perhitungan lama (berbasis CO2):
+        // $pohon = round($co2e / TreeCo2Absorption::default()->getValue(), 2);
+
+        // Perhitungan baru: 100,000 langkah = 1 pohon
+        $pohon = round($steps / 100000, 2);
 
         $report->update([
             'langkah' => $steps,

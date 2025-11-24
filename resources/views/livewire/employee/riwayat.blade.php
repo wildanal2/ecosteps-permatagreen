@@ -82,9 +82,9 @@ new #[Layout('components.layouts.app.header')]
     public function nextWeek()
     {
         $eventStartDate = Carbon::parse('2025-11-21');
-        $nextWeekStart = now()->subWeeks($this->weekOffset + 1)->startOfWeek();
-        
-        if ($nextWeekStart->greaterThanOrEqualTo($eventStartDate)) {
+        $nextWeekEnd = now()->subWeeks($this->weekOffset + 1)->endOfWeek();
+
+        if ($nextWeekEnd->greaterThanOrEqualTo($eventStartDate)) {
             $this->weekOffset++;
             $this->updateChart();
         }
@@ -163,8 +163,8 @@ new #[Layout('components.layouts.app.header')]
                 wire:loading.attr="disabled"
                 @php
                     $eventStartDate = \Carbon\Carbon::parse('2025-11-21');
-                    $nextWeekStart = now()->subWeeks($this->weekOffset + 1)->startOfWeek();
-                    $canGoBack = $nextWeekStart->greaterThanOrEqualTo($eventStartDate);
+                    $nextWeekEnd = now()->subWeeks($this->weekOffset + 1)->endOfWeek();
+                    $canGoBack = $nextWeekEnd->greaterThanOrEqualTo($eventStartDate);
                 @endphp
                 @if(!$canGoBack) disabled @endif
                 class="flex items-center justify-center px-3 py-2 sm:px-4 sm:py-2 bg-gray-100 dark:bg-zinc-700 rounded-md shadow transition-all hover:bg-gray-200 dark:hover:bg-zinc-600 disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:cursor-not-allowed w-full sm:w-auto">
@@ -245,7 +245,7 @@ new #[Layout('components.layouts.app.header')]
                                     Tidak ada foto
                                 </div>
                             @endif
-                            
+
                             @if($report->status_verifikasi->canUpdate())
                                 <livewire:employee.riwayat-report-upload-component :selectedDate="$report->tanggal_laporan" :key="'upload-'.$report->id" />
                                 <flux:modal.trigger name="upload-riwayat-{{ $report->tanggal_laporan }}" class="border border-green-500 text-green-600 dark:text-green-400 dark:border-green-400 py-2 px-3 rounded text-sm font-medium hover:bg-green-50 dark:hover:bg-green-900/30 flex items-center justify-center gap-2 transition">
@@ -280,7 +280,7 @@ new #[Layout('components.layouts.app.header')]
                                                 <p class="text-gray-500 dark:text-gray-400 text-sm">Data Tidak valid</p>
                                             @endif
                                         </div>
-                                        
+
                                         @if($report->status_verifikasi === \App\Enums\StatusVerifikasi::DIVERIFIKASI)
                                             <flux:modal.trigger name="appeal-confirmation-{{ $report->id }}" class="w-full">
                                                 <button class="w-full px-4 py-2 bg-gray-100 rounded-lg text-gray-700 font-semibold hover:bg-gray-200 transition flex items-center justify-center gap-2">
@@ -335,7 +335,7 @@ new #[Layout('components.layouts.app.header')]
                             </p>
                             <p class="text-gray-500 dark:text-zinc-500 text-xs mt-1">{{ $currentDate->format('d M Y') }}</p>
                         </div>
-                        
+
                         @if(!$isFuture)
                             <livewire:employee.riwayat-report-upload-component :selectedDate="$currentDate->format('Y-m-d')" :key="'upload-empty-'.$currentDate->format('Y-m-d')" />
                             <flux:modal.trigger name="upload-riwayat-{{ $currentDate->format('Y-m-d') }}" class="w-full border border-blue-500 text-blue-600 dark:text-blue-400 dark:border-blue-400 py-2 rounded text-sm font-medium hover:bg-blue-50 dark:hover:bg-blue-900/30 flex items-center justify-center gap-2 transition">
