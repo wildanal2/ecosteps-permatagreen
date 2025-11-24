@@ -140,7 +140,7 @@ new #[Layout('components.layouts.app')] #[Title('Data Peserta')] class extends C
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">
                                     {{ number_format($participant->statistics->total_co2e_kg ?? 0, 1, ',', '.') }} kg</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">
-                                    {{ number_format($participant->statistics->total_pohon ?? 0, 0, ',', '.') }} pohon</td>
+                                    {{ number_format($participant->statistics->total_pohon ?? 0, 2, ',', '.') }} pohon</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">
                                     {{ $participant->statistics->current_streak ?? 0 }} hari</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-center text-sm">

@@ -100,7 +100,7 @@ new #[Layout('components.layouts.app')] #[Title('Detail Peserta')] class extends
                     </div>
                     <div>
                         <p class="text-sm text-gray-500 dark:text-gray-400">Total CO₂e:</p>
-                        <p class="font-medium">{{ number_format($participant->statistics->total_co2e_kg ?? 0, 1) }} kg CO₂e</p>
+                        <p class="font-medium">{{ number_format($participant->statistics->total_co2e_kg ?? 0, 1, ',', '.') }} kg CO₂e</p>
                     </div>
                 </div>
 
@@ -113,7 +113,7 @@ new #[Layout('components.layouts.app')] #[Title('Detail Peserta')] class extends
                     </div>
                     <div>
                         <p class="text-sm text-gray-500 dark:text-gray-400">Total Langkah:</p>
-                        <p class="font-medium">{{ number_format($participant->statistics->total_langkah ?? 0) }} langkah</p>
+                        <p class="font-medium">{{ number_format($participant->statistics->total_langkah ?? 0, 0, ',', '.') }} langkah</p>
                     </div>
                 </div>
 
@@ -126,7 +126,7 @@ new #[Layout('components.layouts.app')] #[Title('Detail Peserta')] class extends
                     </div>
                     <div>
                         <p class="text-sm text-gray-500 dark:text-gray-400">Konversi Pohon:</p>
-                        <p class="font-medium">{{ number_format($participant->statistics->total_pohon ?? 0, 0) }} pohon</p>
+                        <p class="font-medium">{{ number_format($participant->statistics->total_pohon ?? 0, 2, ',', '.') }} pohon</p>
                     </div>
                 </div>
             </div>
@@ -178,7 +178,7 @@ new #[Layout('components.layouts.app')] #[Title('Detail Peserta')] class extends
                                 <td class="py-3 px-4 whitespace-nowrap">{{ \Carbon\Carbon::parse($report->tanggal_laporan)->format('d F Y') }}</td>
                                 <td class="py-3 px-4">{{ number_format($report->langkah, 0, ',', '.') }} km</td>
                                 <td class="py-3 px-4">{{ number_format($report->co2e_reduction_kg, 1, ',', '.') }} kg</td>
-                                <td class="py-3 px-4">{{ number_format($report->pohon, 0, ',', '.') }} pohon</td>
+                                <td class="py-3 px-4">{{ number_format($report->pohon, 2, ',', '.') }} pohon</td>
                                 <td class="py-3 px-4">
                                     @if($report->bukti_screenshot)
                                         <a href="{{ $report->bukti_screenshot }}" data-fancybox="gallery-{{ $report->id }}" data-caption="Bukti Screenshot - {{ \Carbon\Carbon::parse($report->tanggal_laporan)->format('d F Y') }}" class="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">

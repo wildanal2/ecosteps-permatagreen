@@ -16,7 +16,8 @@ new #[Layout('components.layouts.app')]
             'totalUsers' => User::where('user_level', 1)->count(),
             'totalSteps' => DailyReport::sum('langkah'),
             'totalCO2' => UserStatistic::sum('total_co2e_kg'),
-            'totalTrees' => UserStatistic::sum('total_co2e_kg') / TreeCo2Absorption::default()->getValue(),
+            // Old calculation based on CO2: UserStatistic::sum('total_co2e_kg') / TreeCo2Absorption::default()->getValue()
+            'totalTrees' => DailyReport::sum('langkah') / 100000, // 100rb langkah = 1 pohon
             'dailyActivity' => DailyReport::select(
                     DB::raw('DATE(tanggal_laporan) as date'),
                     DB::raw('SUM(langkah) as total_steps'),
@@ -30,7 +31,8 @@ new #[Layout('components.layouts.app')]
                     'users.directorate',
                     DB::raw('SUM(user_statistics.total_langkah) as total_steps'),
                     DB::raw('SUM(user_statistics.total_co2e_kg) as co2e'),
-                    DB::raw('ROUND(SUM(user_statistics.total_co2e_kg) / ' . TreeCo2Absorption::default()->getValue() . ', 2) as trees')
+                    // Old: DB::raw('ROUND(SUM(user_statistics.total_co2e_kg) / ' . TreeCo2Absorption::default()->getValue() . ', 2) as trees')
+                    DB::raw('ROUND(SUM(user_statistics.total_langkah) / 100000, 2) as trees') // 100rb langkah = 1 pohon
                 )
                 ->join('user_statistics', 'users.id', '=', 'user_statistics.user_id')
                 ->where('users.user_level', 1)
@@ -45,7 +47,8 @@ new #[Layout('components.layouts.app')]
                     'user_statistics.total_co2e_kg',
                     'user_statistics.total_langkah',
                     'user_statistics.current_streak',
-                    DB::raw('ROUND(user_statistics.total_co2e_kg / ' . TreeCo2Absorption::default()->getValue() . ', 2) as trees')
+                    // Old: DB::raw('ROUND(user_statistics.total_co2e_kg / ' . TreeCo2Absorption::default()->getValue() . ', 2) as trees')
+                    DB::raw('ROUND(user_statistics.total_langkah / 100000, 2) as trees') // 100rb langkah = 1 pohon
                 )
                 ->join('user_statistics', 'users.id', '=', 'user_statistics.user_id')
                 ->where('users.user_level', 1)
@@ -73,7 +76,7 @@ new #[Layout('components.layouts.app')]
                 <div class="flex items-start justify-between">
                     <div class="flex-1">
                         <p class="text-sm text-zinc-500 dark:text-zinc-400">Total Peserta</p>
-                        <h2 class="text-3xl font-bold text-zinc-900 dark:text-zinc-100 mt-2">{{ number_format($totalUsers) }}</h2>
+                        <h2 class="text-3xl font-bold text-zinc-900 dark:text-zinc-100 mt-2">{{ number_format($totalUsers, 0, ',', '.') }}</h2>
                         <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">peserta</p>
                     </div>
                     <div class="bg-white p-1.5 rounded-xl border-[2px] border-[#ededed] flex items-center justify-center">
@@ -88,7 +91,7 @@ new #[Layout('components.layouts.app')]
                 <div class="flex items-start justify-between">
                     <div class="flex-1">
                         <p class="text-sm text-zinc-500 dark:text-zinc-400">Total CO₂e Dihindari</p>
-                        <h2 class="text-3xl font-bold text-zinc-900 dark:text-zinc-100 mt-2">{{ number_format($totalCO2, 1) }}</h2>
+                        <h2 class="text-3xl font-bold text-zinc-900 dark:text-zinc-100 mt-2">{{ number_format($totalCO2, 1, ',', '.') }}</h2>
                         <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">kg CO₂e</p>
                     </div>
                     <div class="bg-white p-1.5 rounded-xl border-[2px] border-[#ededed] flex items-center justify-center">
@@ -103,7 +106,7 @@ new #[Layout('components.layouts.app')]
                 <div class="flex items-start justify-between">
                     <div class="flex-1">
                         <p class="text-sm text-zinc-500 dark:text-zinc-400">Total Langkah</p>
-                        <h2 class="text-3xl font-bold text-zinc-900 dark:text-zinc-100 mt-2">{{ number_format($totalSteps) }}</h2>
+                        <h2 class="text-3xl font-bold text-zinc-900 dark:text-zinc-100 mt-2">{{ number_format($totalSteps, 0, ',', '.') }}</h2>
                         <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">langkah</p>
                     </div>
                     <div class="bg-white p-1.5 rounded-xl border-[2px] border-[#ededed] flex items-center justify-center">
@@ -118,7 +121,7 @@ new #[Layout('components.layouts.app')]
                 <div class="flex items-start justify-between">
                     <div class="flex-1">
                         <p class="text-sm text-zinc-500 dark:text-zinc-400">Estimasi Pohon</p>
-                        <h2 class="text-3xl font-bold text-zinc-900 dark:text-zinc-100 mt-2">{{ number_format($totalTrees, 2) }}</h2>
+                        <h2 class="text-3xl font-bold text-zinc-900 dark:text-zinc-100 mt-2">{{ number_format($totalTrees, 2, ',', '.') }}</h2>
                         <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">pohon</p>
                     </div>
                     <div class="bg-white p-1.5 rounded-xl border-[2px] border-[#ededed] flex items-center justify-center">
@@ -176,9 +179,9 @@ new #[Layout('components.layouts.app')]
                                 <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-700">
                                     <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ $index + 1 }}</td>
                                     <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ $perf->directorate?->label() ?? '-' }}</td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($perf->total_steps) }}</td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($perf->co2e, 1) }} kg</td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($perf->trees, 2) }}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($perf->total_steps, 0, ',', '.') }}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($perf->co2e, 1, ',', '.') }} kg</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($perf->trees, 2, ',', '.') }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -226,9 +229,9 @@ new #[Layout('components.layouts.app')]
                                     </a>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ $individual->directorate?->label() ?? '-' }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($individual->total_langkah) }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($individual->total_co2e_kg, 2) }} kg</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($individual->trees, 2) }} pohon</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($individual->total_langkah, 0, ',', '.') }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($individual->total_co2e_kg, 2, ',', '.') }} kg</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($individual->trees, 2, ',', '.') }} pohon</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ $individual->current_streak }} hari</td>
                             </tr>
                         @endforeach

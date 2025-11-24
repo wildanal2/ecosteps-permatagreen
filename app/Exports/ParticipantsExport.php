@@ -48,7 +48,7 @@ class ParticipantsExport implements FromQuery, WithHeadings, WithMapping
             $user->statistics->total_langkah ?? 0,
             number_format(($user->statistics->total_langkah ?? 0) * 0.0008, 2),
             number_format($user->statistics->total_co2e_kg ?? 0, 2),
-            number_format($user->statistics->total_pohon ?? 0, 0),
+            number_format($user->statistics->total_pohon ?? 0, 2, ',', '.'),
             $user->statistics->current_streak ?? 0,
         ];
     }

@@ -389,7 +389,7 @@ new #[Layout('components.layouts.app.header')]
                                     <i class="ph-fill ph-tree-evergreen text-[#004946] text-2xl"></i>
                                 </div>
                             </div>
-                            <p class="font-medium text-sm text-gray-900 dark:text-zinc-100">{{ number_format($stats->total_pohon, 0, ',', '.') }} pohon</p>
+                            <p class="font-medium text-sm text-gray-900 dark:text-zinc-100">{{ number_format($stats->total_pohon, 2, ',', '.') }} pohon</p>
                         </div>
                     </div>
                 </div>
