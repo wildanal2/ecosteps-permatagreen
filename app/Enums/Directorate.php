@@ -19,6 +19,7 @@ enum Directorate: int
     case RISK = 12;
     case TECHNOLOGY = 13;
     case TREASURY = 14;
+    case PRESIDENT_DIRECTOR = 15;
 
     public function label(): string
     {
@@ -38,6 +39,7 @@ enum Directorate: int
             self::RISK => 'Risk',
             self::TECHNOLOGY => 'Technology',
             self::TREASURY => 'Treasury',
+            self::PRESIDENT_DIRECTOR => "President Director's Office"
         };
     }
 
