@@ -165,7 +165,7 @@ new #[Layout('components.layouts.app')] #[Title('Detail Peserta')] class extends
                     <thead>
                         <tr class="border-b border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400">
                             <th class="py-3 px-4">Tanggal</th>
-                            <th class="py-3 px-4">Total Jarak</th>
+                            <th class="py-3 px-4">Total Langkah</th>
                             <th class="py-3 px-4">CO₂e Dihindari</th>
                             <th class="py-3 px-4">Est. Pohon</th>
                             <th class="py-3 px-4">Foto</th>
@@ -176,7 +176,7 @@ new #[Layout('components.layouts.app')] #[Title('Detail Peserta')] class extends
                         @forelse($reports as $report)
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/60 border-b border-gray-100 dark:border-gray-700">
                                 <td class="py-3 px-4 whitespace-nowrap">{{ \Carbon\Carbon::parse($report->tanggal_laporan)->format('d F Y') }}</td>
-                                <td class="py-3 px-4">{{ number_format($report->langkah, 0, ',', '.') }} km</td>
+                                <td class="py-3 px-4">{{ number_format($report->langkah, 0, ',', '.') }}</td>
                                 <td class="py-3 px-4">{{ number_format($report->co2e_reduction_kg, 1, ',', '.') }} kg</td>
                                 <td class="py-3 px-4">{{ number_format($report->pohon, 2, ',', '.') }} pohon</td>
                                 <td class="py-3 px-4">

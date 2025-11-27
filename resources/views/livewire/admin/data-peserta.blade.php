@@ -17,7 +17,9 @@ new #[Layout('components.layouts.app')] #[Title('Data Peserta')] class extends C
     public function with(): array
     {
         $query = User::where('user_level', 1)
-            ->when($this->search, fn($q) => $q->where('name', 'like', '%' . $this->search . '%'));
+            ->when($this->search, fn($q) => 
+                $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($this->search) . '%'])
+            );
 
         if ($this->sortBy) {
             $query->leftJoin('user_statistics', 'users.id', '=', 'user_statistics.user_id')
