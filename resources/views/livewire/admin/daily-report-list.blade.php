@@ -749,6 +749,70 @@ new #[Layout('components.layouts.app-with-header')] #[Title('Daily Report Admin'
 
 @push('styles')
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+<style>
+    /* Dark mode styles for daterangepicker */
+    .dark .daterangepicker {
+        background-color: #18181b !important;
+        border-color: #3f3f46 !important;
+    }
+    .dark .daterangepicker:before,
+    .dark .daterangepicker:after {
+        border-bottom-color: #18181b !important;
+    }
+    .dark .daterangepicker .calendar-table {
+        background-color: #18181b !important;
+        border-color: #3f3f46 !important;
+    }
+    .dark .daterangepicker .calendar-table thead tr th,
+    .dark .daterangepicker .calendar-table tbody tr td {
+        color: #e4e4e7 !important;
+    }
+    .dark .daterangepicker .calendar-table thead tr {
+        background-color: #27272a !important;
+    }
+    .dark .daterangepicker td.off,
+    .dark .daterangepicker td.off.in-range,
+    .dark .daterangepicker td.off.start-date,
+    .dark .daterangepicker td.off.end-date {
+        color: #71717a !important;
+    }
+    .dark .daterangepicker td.available:hover,
+    .dark .daterangepicker th.available:hover {
+        background-color: #3f3f46 !important;
+        color: #fafafa !important;
+    }
+    .dark .daterangepicker td.in-range {
+        background-color: #3f3f46 !important;
+        color: #e4e4e7 !important;
+    }
+    .dark .daterangepicker td.active,
+    .dark .daterangepicker td.active:hover {
+        background-color: #3b82f6 !important;
+        color: #ffffff !important;
+    }
+    .dark .daterangepicker select.monthselect,
+    .dark .daterangepicker select.yearselect {
+        background-color: #27272a !important;
+        color: #e4e4e7 !important;
+        border-color: #3f3f46 !important;
+    }
+    .dark .daterangepicker .ranges li {
+        color: #e4e4e7 !important;
+    }
+    .dark .daterangepicker .ranges li:hover {
+        background-color: #3f3f46 !important;
+    }
+    .dark .daterangepicker .ranges li.active {
+        background-color: #3b82f6 !important;
+        color: #ffffff !important;
+    }
+    .dark .daterangepicker .drp-buttons {
+        border-top-color: #3f3f46 !important;
+    }
+    .dark .daterangepicker .drp-selected {
+        color: #e4e4e7 !important;
+    }
+</style>
 @endpush
 
 @push('scripts')
