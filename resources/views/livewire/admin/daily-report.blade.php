@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Enums\{VerifiedBy, StatusVerifikasi};
 use App\Services\ReportCalculationService;
 
-new #[Layout('components.layouts.app')] #[Title('Daily Report Admin')] class extends Component {
+new #[Layout('components.layouts.app-with-header')] #[Title('Daily Report Admin')] class extends Component {
     public $reports = [];
     public $page = 1;
     public $hasMore = true;

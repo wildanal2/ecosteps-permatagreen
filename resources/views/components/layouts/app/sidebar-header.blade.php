@@ -161,6 +161,68 @@
             </flux:menu>
         </flux:dropdown>
     </flux:header>
+    <flux:header class="block! bg-white lg:bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-700">
+        <flux:navbar class="lg:hidden w-full">
+            <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
+
+            <flux:spacer />
+
+            <flux:dropdown position="top" align="end">
+                @if (auth()->user()->profile_photo)
+                    <flux:profile :avatar="Storage::disk('s3')->url(auth()->user()->profile_photo)" />
+                @else
+                    <flux:profile :initials="auth()->user()->initials()" />
+                @endif
+
+                <flux:menu>
+                    <flux:menu.radio.group>
+                        <div class="p-0 text-sm font-normal">
+                            <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
+                                <span class="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-lg">
+                                    @if (auth()->user()->profile_photo)
+                                        <img src="{{ Storage::disk('s3')->url(auth()->user()->profile_photo) }}"
+                                            class="h-full w-full object-cover" alt="Profile">
+                                    @else
+                                        <span
+                                            class="flex h-full w-full items-center justify-center rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white">
+                                            {{ auth()->user()->initials() }}
+                                        </span>
+                                    @endif
+                                </span>
+
+                                <div class="grid flex-1 text-start text-sm leading-tight">
+                                    <span class="truncate font-semibold">{{ auth()->user()->name }}</span>
+                                    <span class="truncate text-xs">{{ auth()->user()->email }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </flux:menu.radio.group>
+
+                    <flux:menu.separator />
+
+                    <flux:menu.radio.group>
+                        <flux:menu.item :href="route('profile.edit')" icon="cog" wire:navigate>{{ __('Settings') }}
+                        </flux:menu.item>
+                    </flux:menu.radio.group>
+
+                    <flux:menu.separator />
+
+                    <form method="POST" action="{{ route('logout') }}" class="w-full">
+                        @csrf
+                        <flux:menu.item as="button" type="submit" icon="arrow-right-start-on-rectangle" class="w-full"
+                            data-test="logout-button">
+                            {{ __('Log Out') }}
+                        </flux:menu.item>
+                    </form>
+                </flux:menu>
+            </flux:dropdown>
+        </flux:navbar>
+
+        <flux:navbar scrollable>
+            <flux:navbar.item href="{{ route('admin.daily-report') }}" :current="request()->routeIs('admin.daily-report')" wire:navigate>Gallery Report</flux:navbar.item>
+            <flux:navbar.item href="{{ route('admin.daily-report-list') }}" :current="request()->routeIs('admin.daily-report-list')" wire:navigate>Data List Participant</flux:navbar.item>
+        </flux:navbar>
+    </flux:header>
 
     {{ $slot }}
 
@@ -174,6 +236,7 @@
             // Options
         });
     </script>
+    @stack('scripts')
 </body>
 
 </html>

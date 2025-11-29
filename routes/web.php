@@ -38,6 +38,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'check.u
     Volt::route('data-peserta/{id}', 'admin.detail-peserta')->name('detail-peserta');
     Volt::route('verifikasi-bukti', 'admin.verifikasi-bukti')->name('verifikasi-bukti');
     Volt::route('daily-report', 'admin.daily-report')->name('daily-report');
+    Volt::route('daily-report-list', 'admin.daily-report-list')->name('daily-report-list');
     Volt::route('leaderboard', 'admin.leaderboard')->name('leaderboard');
     Volt::route('system-info', 'system-info')->name('system-info');
 });

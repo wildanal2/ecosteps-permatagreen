@@ -60,3 +60,5 @@
 <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-treemap@2.3.0/dist/chartjs-chart-treemap.min.js"></script>
 @vite(['resources/css/app.css', 'resources/js/app.js'])
 @fluxAppearance
+
+@stack('styles')
