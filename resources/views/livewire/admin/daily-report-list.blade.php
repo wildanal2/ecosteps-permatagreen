@@ -182,9 +182,9 @@ new #[Layout('components.layouts.app-with-header')] #[Title('Daily Report Admin'
                 $npk = $sheet->getCellByColumnAndRow(3, $row)->getValue();
                 $kota = $sheet->getCellByColumnAndRow(4, $row)->getValue();
                 $nohp = $sheet->getCellByColumnAndRow(5, $row)->getValue();
-                $email = $sheet->getCellByColumnAndRow(6, $row)->getValue();
-                $langkah = $sheet->getCellByColumnAndRow(7, $row)->getValue();
-                $jarakkm = $sheet->getCellByColumnAndRow(8, $row)->getValue();
+                $email = $sheet->getCellByColumnAndRow(6, $row)->getValue() ?? '';
+                $langkah = $sheet->getCellByColumnAndRow(7, $row)->getValue() ?? 0;
+                $jarakkm = $sheet->getCellByColumnAndRow(8, $row)->getValue() ?? 0;
                 
                 if (empty($nama) && empty($langkah)) {
                     continue;
@@ -297,7 +297,7 @@ new #[Layout('components.layouts.app-with-header')] #[Title('Daily Report Admin'
                     'manual_verification_requested' => false,
                 ]);
 
-                app(ReportCalculationService::class)->recalculate($report->id, $row['langkah']);
+                app(ReportCalculationService::class)->recalculate($report->id, $row['langkah'] ?? 0);
                 $inserted++;
             } elseif ($row['status'] === 'update') {
                 $existingReport = DailyReport::where('user_id', $user->id)
