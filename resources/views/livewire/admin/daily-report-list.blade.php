@@ -59,7 +59,7 @@ new #[Layout('components.layouts.app-with-header')] #[Title('Daily Report Admin'
 
     public function with()
     {
-        $query = DailyReport::with('user');
+        $query = DailyReport::with(['user'])->orderBy('updated_at', 'desc');
 
         if ($this->search) {
             $query->whereHas('user', function ($q) {
@@ -218,7 +218,7 @@ new #[Layout('components.layouts.app-with-header')] #[Title('Daily Report Admin'
     public function checkData()
     {
         foreach ($this->previewData as $key => $row) {
-            $user = User::where('email', $row['email'])->first();
+            $user = User::where('email', $row['email']??'')->first();
             
             if (!$user) {
                 $this->previewData[$key]['status'] = 'skip';
@@ -235,6 +235,7 @@ new #[Layout('components.layouts.app-with-header')] #[Title('Daily Report Admin'
                 } else {
                     $this->previewData[$key]['status'] = 'tidak perlu diupdate';
                 }
+                $this->previewData[$key]['langkah_existing'] = $existingReport->langkah ?? 0;
             } else {
                 $this->previewData[$key]['status'] = 'insert';
             }
@@ -285,10 +286,10 @@ new #[Layout('components.layouts.app-with-header')] #[Title('Daily Report Admin'
                 $report = DailyReport::create([
                     'user_id' => $user->id,
                     'tanggal_laporan' => $this->uploadDate,
-                    'langkah' => $row['langkah'],
+                    'langkah' => $row['langkah'] ?? 0,
                     'bukti_screenshot' => 'https://i.imghippo.com/files/ZqyA5776VTM.png',
                     'status_verifikasi' => StatusVerifikasi::DIVERIFIKASI,
-                    'ocr_result' => json_encode(['steps' => (int)$row['langkah']]),
+                    'ocr_result' => json_encode(['steps' => (int)$row['langkah']??0]),
                     'count_document' => 1,
                     'verified_id' => VerifiedBy::ADMIN,
                     'verified_by' => auth()->id(),
@@ -305,10 +306,10 @@ new #[Layout('components.layouts.app-with-header')] #[Title('Daily Report Admin'
                     
                 if ($existingReport) {
                     $existingReport->update([
-                        'langkah' => $row['langkah'],
+                        'langkah' => $row['langkah'] ?? 0,
                         'bukti_screenshot' => 'https://i.imghippo.com/files/ZqyA5776VTM.png',
                         'status_verifikasi' => StatusVerifikasi::DIVERIFIKASI,
-                        'ocr_result' => json_encode(['steps' => (int)$row['langkah']]),
+                        'ocr_result' => json_encode(['steps' => (int)$row['langkah']??0]),
                         'count_document' => 1,
                         'verified_id' => VerifiedBy::ADMIN,
                         'verified_by' => auth()->id(),
@@ -661,17 +662,34 @@ new #[Layout('components.layouts.app-with-header')] #[Title('Daily Report Admin'
                                     <td class="px-4 py-2 text-sm text-gray-900 dark:text-zinc-100">{{ $row['npk'] }}</td>
                                     <td class="px-4 py-2 text-sm text-gray-900 dark:text-zinc-100">{{ $row['kota'] }}</td>
                                     <td class="px-4 py-2 text-sm text-gray-900 dark:text-zinc-100">{{ $row['email'] }}</td>
-                                    <td class="px-4 py-2 text-sm font-semibold text-gray-900 dark:text-zinc-100">{{ number_format($row['langkah'], 0, ',', '.') }}</td>
+                                    <td class="px-4 py-2 text-sm font-semibold text-gray-900 dark:text-zinc-100 inline-flex whitespace-nowrap">
+                                        @if(isset($row['status']))
+                                            @if($row['status'] === 'update')
+                                                <span class="text-gray-600 dark:text-gray-400">{{ number_format($row['langkah_existing'] ?? 0, 0, ',', '.') }}</span>
+                                                <span class="text-green-600 dark:text-green-400"> → {{ number_format($row['langkah'], 0, ',', '.') }}</span>
+                                            @elseif($row['status'] === 'insert')
+                                                <span class="text-gray-600 dark:text-gray-400">0</span>
+                                                <span class="text-green-600 dark:text-green-400"> → {{ number_format($row['langkah'], 0, ',', '.') }}</span>
+                                            @elseif($row['status'] === 'tidak perlu diupdate')
+                                                <span class="text-green-600 dark:text-green-400 mr-1">{{ number_format($row['langkah_existing'] ?? 0, 0, ',', '.') }}</span>
+                                                <span class="text-red-600 dark:text-red-400"> ({{ number_format($row['langkah'], 0, ',', '.') }})</span>
+                                            @else
+                                                {{ number_format($row['langkah'], 0, ',', '.') }}
+                                            @endif
+                                        @else
+                                            {{ number_format($row['langkah'], 0, ',', '.') }}
+                                        @endif
+                                    </td>
                                     <td class="px-4 py-2 text-sm">
                                         @if(isset($row['status']))
                                             @if($row['status'] === 'skip')
-                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200">Dilewati</span>
+                                                <span class="inline-flex whitespace-nowrap items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200">Dilewati</span>
                                             @elseif($row['status'] === 'update')
-                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">Diperbarui</span>
+                                                <span class="inline-flex whitespace-nowrap items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">Diperbarui</span>
                                             @elseif($row['status'] === 'insert')
-                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Data Baru</span>
+                                                <span class="inline-flex whitespace-nowrap items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Data Baru</span>
                                             @elseif($row['status'] === 'tidak perlu diupdate')
-                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">Sudah Terbaru</span>
+                                                <span class="inline-flex whitespace-nowrap items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">Sudah Terbaru</span>
                                             @endif
                                         @endif
                                     </td>
