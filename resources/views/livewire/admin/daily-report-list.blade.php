@@ -439,7 +439,7 @@ new #[Layout('components.layouts.app-with-header')] #[Title('Daily Report Admin'
                     </thead>
                     <tbody class="divide-y divide-gray-200 dark:divide-zinc-700">
                         @forelse ($reports as $index => $report)
-                            <tr class="hover:bg-gray-50 dark:hover:bg-zinc-900">
+                            <tr wire:key="report-row-{{ $report->id }}" class="hover:bg-gray-50 dark:hover:bg-zinc-900">
                                 <td class="px-4 py-3 text-sm text-gray-900 dark:text-zinc-100">
                                     {{ $reports->firstItem() + $index }}
                                 </td>
@@ -472,7 +472,7 @@ new #[Layout('components.layouts.app-with-header')] #[Title('Daily Report Admin'
                             </tr>
 
                             {{-- Modal Verifikasi --}}
-                            <flux:modal name="verify-modal-{{ $report->id }}" class="max-w-7xl" :dismissible="false">
+                            <flux:modal wire:key="verify-modal-{{ $report->id }}" name="verify-modal-{{ $report->id }}" class="max-w-7xl" :dismissible="false">
                                 <div class="space-y-6">
                                     <div>
                                         <flux:heading size="lg">Verifikasi Laporan Aktivitas</flux:heading>
@@ -864,6 +864,11 @@ $(function() {
            'Bulan Lalu': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
         }
     }, function(start, end) {
+        var dateRangeStr = start.format('YYYY-MM-DD') === end.format('YYYY-MM-DD') 
+            ? start.format('YYYY-MM-DD')
+            : start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD');
+        
+        $('#dateRangePicker').val(dateRangeStr);
         @this.set('dateRange', start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
     });
 
