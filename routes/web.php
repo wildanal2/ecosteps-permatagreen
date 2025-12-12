@@ -40,6 +40,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'check.u
     Volt::route('daily-report', 'admin.daily-report')->name('daily-report');
     Volt::route('daily-report-list', 'admin.daily-report-list')->name('daily-report-list');
     Volt::route('leaderboard', 'admin.leaderboard')->name('leaderboard');
+    Volt::route('leaderboard-direktorat', 'admin.leaderboard-direktorat')->name('leaderboard.direktorat');
     Volt::route('system-info', 'system-info')->name('system-info');
 });
 

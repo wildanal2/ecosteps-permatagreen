@@ -136,6 +136,11 @@ new #[Layout('components.layouts.app-with-header')] #[Title('Daily Report Admin'
 
 ?>
 
+<x-slot:navbar>
+    <flux:navbar.item href="{{ route('admin.daily-report') }}" :current="request()->routeIs('admin.daily-report')" wire:navigate>Gallery Report</flux:navbar.item>
+    <flux:navbar.item href="{{ route('admin.daily-report-list') }}" :current="request()->routeIs('admin.daily-report-list')">Data List Participant</flux:navbar.item>
+</x-slot:navbar>
+
 <div>
     <div class="flex flex-col gap-6">
         <div>

@@ -30,7 +30,7 @@
                         :current="request()->routeIs(['admin.daily-report', 'admin.daily-report-list'])" wire:navigate>Daily Report
                     </flux:navlist.item>
                     <flux:navlist.item icon="trophy" :href="route('admin.leaderboard')"
-                        :current="request()->routeIs('admin.leaderboard')" wire:navigate>Leaderboard</flux:navlist.item>
+                        :current="request()->routeIs(['admin.leaderboard','admin.leaderboard.direktorat'])" wire:navigate>Leaderboard</flux:navlist.item>
                 </flux:navlist.group>
             @else
                 {{-- Menu Karyawan --}}
@@ -218,10 +218,11 @@
             </flux:dropdown>
         </flux:navbar>
 
-        <flux:navbar scrollable>
-            <flux:navbar.item href="{{ route('admin.daily-report') }}" :current="request()->routeIs('admin.daily-report')" wire:navigate>Gallery Report</flux:navbar.item>
-            <flux:navbar.item href="{{ route('admin.daily-report-list') }}" :current="request()->routeIs('admin.daily-report-list')" >Data List Participant</flux:navbar.item>
-        </flux:navbar>
+        @if(isset($navbar) && $navbar != '')
+            <flux:navbar scrollable>
+                {{ $navbar }}
+            </flux:navbar>
+        @endif
     </flux:header>
 
     {{ $slot }}

@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 use App\Exports\LeaderboardExport;
 use Maatwebsite\Excel\Facades\Excel;
 
-new #[Layout('components.layouts.app')]
+new #[Layout('components.layouts.app-with-header')]
     #[Title('Leaderboard')]
     class extends Component {
     use WithPagination;
@@ -103,15 +103,15 @@ new #[Layout('components.layouts.app')]
             $this->sortDirectionDirectorates = 'desc';
         }
         $this->resetPage('directoratesPage');
-    }
-
-    public function exportData()
-    {
-        return Excel::download(new LeaderboardExport(), 'leaderboard-' . date('Y-m-d_H-i-s') . '.xlsx');
-    }
+    } 
 };
 
 ?>
+
+<x-slot:navbar>
+    <flux:navbar.item href="{{ route('admin.leaderboard') }}" :current="request()->routeIs('admin.leaderboard')" wire:navigate>Leaderboard</flux:navbar.item>
+    <flux:navbar.item href="{{ route('admin.leaderboard.direktorat') }}" :current="request()->routeIs('admin.leaderboard.direktorat')">Leaderboard Direktorat</flux:navbar.item>
+</x-slot:navbar>
 
 <div>
     <div class="flex justify-between py-5 mb-5">
@@ -120,11 +120,7 @@ new #[Layout('components.layouts.app')]
             <flux:text class="mt-2 max-w-4xl">
                 Lihat peringkat langkah para PermataBankers dan kontribusi terhadap pengurangan emisi CO₂e. Setiap langkah yang anda ambil membawa dampak nyata bagi bumi dan direktorat anda.
             </flux:text>
-        </div>
-
-        <div>
-            <flux:button wire:click="exportData" variant="outline" icon="arrow-down-tray">Unduh Data</flux:button>
-        </div>
+        </div> 
     </div>
 
     <div class="max-w-7xl mx-auto space-y-6">
@@ -257,7 +253,11 @@ new #[Layout('components.layouts.app')]
                                         {{ $directorate->rank }}
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ $directorateEnum?->label() ?? '-' }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <a href="{{ route('admin.leaderboard.direktorat', ['directorate' => $directorate->directorate]) }}" class="text-[#004444] hover:text-[#006666] dark:text-[#00aa88] dark:hover:text-[#00cc99] font-medium hover:underline">
+                                        {{ $directorateEnum?->label() ?? '-' }}
+                                    </a>
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($directorate->total_langkah ?? 0, 0, ',', '.') }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($directorate->total_co2e_kg ?? 0, 2, ',', '.') }} kg</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100">{{ number_format($directorate->jumlah_peserta ?? 0, 0, ',', '.') }} peserta</td>
