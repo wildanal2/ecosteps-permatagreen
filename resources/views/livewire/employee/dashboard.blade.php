@@ -47,13 +47,17 @@ new #[Layout('components.layouts.app.header')]
     public function getChartData()
     {
         $user = auth()->user();
+        $eventEndDate = \Carbon\Carbon::parse(config('app.date_end_event', '2025-12-21'))->endOfDay();
+        $isEventEnded = now()->isAfter($eventEndDate);
+        $endDate = $isEventEnded ? $eventEndDate->copy()->startOfDay() : now();
+        
         $chartDates = collect();
         for ($i = 6; $i >= 0; $i--) {
-            $chartDates->push(now()->subDays($i));
+            $chartDates->push($endDate->copy()->subDays($i));
         }
 
         $chartReports = DailyReport::where('user_id', $user->id)
-            ->whereBetween('tanggal_laporan', [now()->subDays(6)->startOfDay(), now()->endOfDay()])
+            ->whereBetween('tanggal_laporan', [$endDate->copy()->subDays(6)->startOfDay(), $endDate->endOfDay()])
             ->get()
             ->keyBy(fn($r) => Carbon::parse($r->tanggal_laporan)->format('Y-m-d'));
 
@@ -69,6 +73,10 @@ new #[Layout('components.layouts.app.header')]
     public function with(): array
     {
         $user = auth()->user();
+        
+        // Check event end date
+        $eventEndDate = \Carbon\Carbon::parse(config('app.date_end_event', '2025-12-21'))->endOfDay();
+        $isEventEnded = now()->isAfter($eventEndDate);
 
         // Ambil statistik user
         $stats = UserStatistic::firstOrCreate(
@@ -91,14 +99,15 @@ new #[Layout('components.layouts.app.header')]
         $todaySteps = $todayReport?->langkah ?? 0;
         $targetSteps = 10000;
 
-        // Chart data (7 hari terakhir)
+        // Chart data (7 hari terakhir atau sampai event berakhir)
         $chartDates = collect();
+        $endDate = $isEventEnded ? $eventEndDate->copy()->startOfDay() : now();
         for ($i = 6; $i >= 0; $i--) {
-            $chartDates->push(now()->subDays($i));
+            $chartDates->push($endDate->copy()->subDays($i));
         }
 
         $chartReports = DailyReport::where('user_id', $user->id)
-            ->whereBetween('tanggal_laporan', [now()->subDays(6)->startOfDay(), now()->endOfDay()])
+            ->whereBetween('tanggal_laporan', [$endDate->copy()->subDays(6)->startOfDay(), $endDate->endOfDay()])
             ->get()
             ->keyBy(fn($r) => Carbon::parse($r->tanggal_laporan)->format('Y-m-d'));
 
@@ -171,6 +180,8 @@ new #[Layout('components.layouts.app.header')]
             'userBelow' => $userBelow,
             'topDirectorates' => $topDirectorates,
             'totalDirectorates' => $totalDirectorates,
+            'isEventEnded' => $isEventEnded,
+            'eventEndDate' => $eventEndDate,
         ];
     }
 };
@@ -188,8 +199,14 @@ new #[Layout('components.layouts.app.header')]
                 Lihat progres langkah Anda hari ini dan sejauh mana Anda berkontribusi dalam gerakan hijau.
             </p>
 
+            {{-- Alert Event Berakhir --}}
+            @if($isEventEnded)
+                <div class="mt-3 rounded-xl bg-red-100 text-red-700 px-4 py-3 flex items-center gap-2">
+                    <flux:icon.exclamation-circle class="w-5 h-5" />
+                    <span>Event telah berakhir pada {{ $eventEndDate->format('d M Y') }}.</span>
+                </div>
             {{-- Alert --}}
-            @if(!$hasReportedToday)
+            @elseif(!$hasReportedToday)
                 <div class="mt-3 rounded-xl bg-yellow-100 text-yellow-700 px-4 py-3 flex items-center gap-2">
                     <flux:icon.exclamation-triangle class="w-5 h-5" />
                     <span>Anda belum mengirim laporan langkah hari ini</span>
@@ -223,7 +240,7 @@ new #[Layout('components.layouts.app.header')]
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
             {{-- Progres Harian --}}
-            <div class="rounded-2xl bg-white dark:bg-zinc-800 p-5 shadow-sm border border-gray-100 dark:border-zinc-700">
+            <div class="rounded-2xl bg-white dark:bg-zinc-800 p-5 shadow-sm border border-gray-100 dark:border-zinc-700 {{ $isEventEnded ? 'opacity-60' : '' }}">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-semibold text-gray-800 dark:text-zinc-100">Progres Harian</h3>
                     @if($todaySteps == 0)
@@ -245,13 +262,20 @@ new #[Layout('components.layouts.app.header')]
                 </div>
 
                 <div class="flex gap-2">
-                    <flux:modal.trigger name="upload-harian" class="flex-1">
-                        <button class="w-full bg-blue-600 text-white py-2 rounded-xl font-semibold hover:bg-blue-700 transition flex items-center justify-center gap-2 whitespace-nowrap">
-                            <i class="ph-fill ph-footprints"></i>
-                            {{ $hasReportedToday ? 'Perbarui Laporan' : 'Kirim Laporan Hari Ini' }}
+                    @if(!$isEventEnded)
+                        <flux:modal.trigger name="upload-harian" class="flex-1">
+                            <button class="w-full bg-blue-600 text-white py-2 rounded-xl font-semibold hover:bg-blue-700 transition flex items-center justify-center gap-2 whitespace-nowrap">
+                                <i class="ph-fill ph-footprints"></i>
+                                {{ $hasReportedToday ? 'Perbarui Laporan' : 'Kirim Laporan Hari Ini' }}
+                            </button>
+                        </flux:modal.trigger>
+                    @else
+                        <button disabled class="flex-1 w-full bg-gray-400 text-white py-2 rounded-xl font-semibold cursor-not-allowed flex items-center justify-center gap-2 whitespace-nowrap">
+                            <i class="ph-fill ph-lock"></i>
+                            Event Telah Berakhir
                         </button>
-                    </flux:modal.trigger>
-                    @if($todayReport && $todayReport->status_verifikasi === \App\Enums\StatusVerifikasi::DIVERIFIKASI)
+                    @endif
+                    @if(!$isEventEnded && $todayReport && $todayReport->status_verifikasi === \App\Enums\StatusVerifikasi::DIVERIFIKASI)
                     <flux:modal.trigger name="appeal-confirmation" style="min-height:48px">
                         <button
                             class="px-2 bg-gray-100 py-3 rounded-xl text-gray-700 font-semibold text-base hover:bg-gray-200 transition flex items-center justify-center gap-2 whitespace-nowrap"

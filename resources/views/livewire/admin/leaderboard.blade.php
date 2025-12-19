@@ -5,7 +5,7 @@ use Livewire\Attributes\{Layout, Title};
 use Livewire\WithPagination;
 use App\Models\{User, UserStatistic};
 use Illuminate\Support\Facades\DB;
-use App\Exports\LeaderboardExport;
+use App\Exports\{LeaderboardExport, LeaderboardParticipantExport, LeaderboardDirectorateExport};
 use Maatwebsite\Excel\Facades\Excel;
 
 new #[Layout('components.layouts.app-with-header')]
@@ -103,7 +103,23 @@ new #[Layout('components.layouts.app-with-header')]
             $this->sortDirectionDirectorates = 'desc';
         }
         $this->resetPage('directoratesPage');
-    } 
+    }
+
+    public function exportDataLeadParticipants()
+    { 
+        return Excel::download(
+            new LeaderboardParticipantExport($this->sortByParticipants, $this->sortDirectionParticipants), 
+            'leaderboard-participants-'. date('Y-m-d_H-i-s') . '.xlsx'
+        );
+    }
+
+    public function exportDataLeadDirectorates()
+    { 
+        return Excel::download(
+            new LeaderboardDirectorateExport($this->sortByDirectorates, $this->sortDirectionDirectorates), 
+            'leaderboard-directorates-'. date('Y-m-d_H-i-s') . '.xlsx'
+        );
+    }
 };
 
 ?>
@@ -126,9 +142,12 @@ new #[Layout('components.layouts.app-with-header')]
     <div class="max-w-7xl mx-auto space-y-6">
         <!-- Leaderboard Seluruh Peserta -->
         <div class="bg-white dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 rounded-lg shadow p-6 space-y-6">
-            <div>
-                <flux:heading size="lg">Leaderboard Seluruh Peserta</flux:heading>
-                <flux:subheading>Peringkat peserta berdasarkan total langkah yang telah dicapai.</flux:subheading>
+            <div class="flex justify-between">
+                <div>
+                    <flux:heading size="lg">Leaderboard Seluruh Peserta</flux:heading>
+                    <flux:subheading>Peringkat peserta berdasarkan total langkah yang telah dicapai.</flux:subheading>
+                </div>
+                <flux:button wire:click="exportDataLeadParticipants" variant="outline" icon="arrow-down-tray">Unduh Data</flux:button>
             </div>
 
             <flux:input wire:model.live.debounce.300ms="searchParticipants" placeholder="Cari nama peserta..." icon="magnifying-glass" />
@@ -205,9 +224,12 @@ new #[Layout('components.layouts.app-with-header')]
 
         <!-- Leaderboard Direktorat -->
         <div class="bg-white dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 rounded-lg shadow p-6 space-y-6">
-            <div>
-                <flux:heading size="lg">Leaderboard Direktorat</flux:heading>
-                <flux:subheading>Peringkat direktorat berdasarkan total langkah dari seluruh peserta.</flux:subheading>
+            <div class="flex justify-between">
+                <div>
+                    <flux:heading size="lg">Leaderboard Direktorat</flux:heading>
+                    <flux:subheading>Peringkat direktorat berdasarkan total langkah dari seluruh peserta.</flux:subheading>
+                </div>
+                <flux:button wire:click="exportDataLeadDirectorates" variant="outline" icon="arrow-down-tray">Unduh Data</flux:button>
             </div>
 
             <div class="overflow-x-auto">

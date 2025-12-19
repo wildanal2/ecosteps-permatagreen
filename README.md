@@ -105,6 +105,9 @@ REQUIRE_EMAIL_VERIFICATION=false
 
 # API Key untuk external access
 XAPI_KEY=your_api_key
+
+# Tanggal berakhir event (format: YYYY-MM-DD)
+DATE_END_EVENT="2025-12-21"
 ```
 
 ### 9. Migrasi Database
@@ -252,6 +255,7 @@ php artisan db:seed  # Seed data saja
 | `REQUIRE_EMAIL_VERIFICATION` | Aktifkan verifikasi email | false |
 | `OCR_API_URL` | URL FastAPI OCR service | - |
 | `OCR_API_KEY` | API key untuk OCR service | - |
+| `DATE_END_EVENT` | Tanggal berakhir event (YYYY-MM-DD) | 2025-12-21 |
 
 ## 🐛 Troubleshooting
 
@@ -279,6 +283,7 @@ Lihat folder `docs/` untuk dokumentasi lengkap:
 - `ROLE_STRUCTURE.md` - Struktur role dan permission
 - `MANUAL_VERIFICATION_SYSTEM.md` - Sistem verifikasi manual
 - `UPLOAD_OPTIMIZATION.md` - Optimasi upload
+- `EVENT_END_DATE.md` - Fitur event berakhir otomatis
 - Dan lainnya...
 
 ## 🤝 Contributing

@@ -37,10 +37,15 @@ new #[Layout('components.layouts.app.header')]
     public function with(): array
     {
         $userId = auth()->id();
+        
+        // Check event end date
+        $eventEndDate = \Carbon\Carbon::parse(config('app.date_end_event', '2025-12-21'))->endOfDay();
+        $isEventEnded = now()->isAfter($eventEndDate);
 
-        // Hitung minggu berdasarkan offset
-        $startOfWeek = now()->subWeeks($this->weekOffset)->startOfWeek();
-        $endOfWeek = now()->subWeeks($this->weekOffset)->endOfWeek();
+        // Hitung minggu berdasarkan offset (batasi sampai event berakhir)
+        $currentDate = $isEventEnded ? $eventEndDate->copy()->startOfDay() : now();
+        $startOfWeek = $currentDate->copy()->subWeeks($this->weekOffset)->startOfWeek();
+        $endOfWeek = $currentDate->copy()->subWeeks($this->weekOffset)->endOfWeek();
 
         // Generate 7 hari dalam minggu
         $weekDates = collect();
@@ -58,12 +63,16 @@ new #[Layout('components.layouts.app.header')]
         // Map setiap tanggal dengan data atau null
         $reports = $weekDates->map(fn($date) => $reportsData->get($date));
 
-        // Chart data (sesuai minggu yang ditampilkan)
+        // Chart data (sesuai minggu yang ditampilkan, dibatasi sampai event berakhir)
         $chartLabels = collect();
         $chartSteps = collect();
         $chartDates = collect();
         for ($i = 0; $i < 7; $i++) {
             $date = $startOfWeek->copy()->addDays($i);
+            // Skip tanggal setelah event berakhir
+            if ($isEventEnded && $date->isAfter($eventEndDate->copy()->startOfDay())) {
+                continue;
+            }
             $chartLabels->push($date->format('D'));
             $chartDates->push($date->format('d M'));
             $chartSteps->push($reportsData->get($date->format('Y-m-d'))?->langkah ?? 0);
@@ -76,6 +85,8 @@ new #[Layout('components.layouts.app.header')]
             'chartSteps' => $chartSteps,
             'startOfWeek' => $startOfWeek,
             'endOfWeek' => $endOfWeek,
+            'isEventEnded' => $isEventEnded,
+            'eventEndDate' => $eventEndDate,
         ];
     }
 
@@ -92,7 +103,17 @@ new #[Layout('components.layouts.app.header')]
 
     public function prevWeek()
     {
+        $eventEndDate = Carbon::parse(config('app.date_end_event', '2025-12-21'))->endOfDay();
+        $isEventEnded = now()->isAfter($eventEndDate);
+        
         if ($this->weekOffset > 0) {
+            // Jika event berakhir, cek apakah minggu depan tidak melewati event end date
+            if ($isEventEnded) {
+                $nextWeekStart = $eventEndDate->copy()->startOfDay()->subWeeks($this->weekOffset - 1)->startOfWeek();
+                if ($nextWeekStart->isAfter($eventEndDate->copy()->startOfDay())) {
+                    return; // Tidak bisa maju jika melewati event end date
+                }
+            }
             $this->weekOffset--;
             $this->updateChart();
         }
@@ -101,8 +122,12 @@ new #[Layout('components.layouts.app.header')]
     private function updateChart()
     {
         $userId = auth()->id();
-        $startOfWeek = now()->subWeeks($this->weekOffset)->startOfWeek();
-        $endOfWeek = now()->subWeeks($this->weekOffset)->endOfWeek();
+        $eventEndDate = Carbon::parse(config('app.date_end_event', '2025-12-21'))->endOfDay();
+        $isEventEnded = now()->isAfter($eventEndDate);
+        $currentDate = $isEventEnded ? $eventEndDate->copy()->startOfDay() : now();
+        
+        $startOfWeek = $currentDate->copy()->subWeeks($this->weekOffset)->startOfWeek();
+        $endOfWeek = $currentDate->copy()->subWeeks($this->weekOffset)->endOfWeek();
 
         $reportsData = DailyReport::where('user_id', $userId)
             ->whereBetween('tanggal_laporan', [$startOfWeek, $endOfWeek])
@@ -114,6 +139,10 @@ new #[Layout('components.layouts.app.header')]
         $chartSteps = [];
         for ($i = 0; $i < 7; $i++) {
             $date = $startOfWeek->copy()->addDays($i);
+            // Skip tanggal setelah event berakhir
+            if ($isEventEnded && $date->isAfter($eventEndDate->copy()->startOfDay())) {
+                continue;
+            }
             $chartLabels[] = $date->format('D');
             $chartDates[] = $date->format('d M');
             $chartSteps[] = $reportsData->get($date->format('Y-m-d'))?->langkah ?? 0;
@@ -146,15 +175,13 @@ new #[Layout('components.layouts.app.header')]
             <canvas id="activityChart" class="w-full" style="max-height: 200px;"></canvas>
         </div>
 
-        {{-- Search + Button --}}
-        {{-- <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-            <input
-                type="text"
-                wire:model.live="search"
-                placeholder="Cari Tanggal..."
-                class="w-full md:w-1/3 rounded-xl border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 placeholder-gray-400 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            />
-        </div> --}}
+        {{-- Alert Event Berakhir --}}
+        @if($isEventEnded)
+            <div class="rounded-xl bg-red-100 text-red-700 px-4 py-3 flex items-center gap-2">
+                <flux:icon.exclamation-circle class="w-5 h-5" />
+                <span>Event telah berakhir pada {{ $eventEndDate->format('d M Y') }}.</span>
+            </div>
+        @endif
 
         {{-- Navigasi Minggu --}}
         <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-4 my-4">
@@ -191,9 +218,10 @@ new #[Layout('components.layouts.app.header')]
                     $currentDate = $startOfWeek->copy()->addDays($index);
                     $eventStartDate = \Carbon\Carbon::parse('2025-11-21');
                     $isBeforeEvent = $currentDate->lt($eventStartDate);
+                    $isAfterEventEnd = $isEventEnded && $currentDate->isAfter($eventEndDate->copy()->startOfDay());
                 @endphp
-                @if($isBeforeEvent)
-                    {{-- Skip tanggal sebelum event dimulai --}}
+                @if($isBeforeEvent || $isAfterEventEnd)
+                    {{-- Skip tanggal sebelum event dimulai atau setelah event berakhir --}}
                 @elseif($report)
                     @php
                         $isToday = Carbon::parse($report->tanggal_laporan)->isToday();

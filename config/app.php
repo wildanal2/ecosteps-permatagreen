@@ -108,6 +108,7 @@ return [
     'xapi_key' => env('XAPI_KEY', 'sk_dev_a1b2c3d4e5f6g7h8i9j0'),
     'ocr_api_url' => env('OCR_API_URL', 'http://localhost:8000'),
     'ocr_api_key' => env('OCR_API_KEY', 'sk_fast_ji2348sdf9snjamau66asd8nh3'),
+    'date_end_event' => env('DATE_END_EVENT', '2025-12-21'),
 
     /*
     |--------------------------------------------------------------------------
