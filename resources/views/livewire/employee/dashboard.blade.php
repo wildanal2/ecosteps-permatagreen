@@ -76,7 +76,9 @@ new #[Layout('components.layouts.app.header')]
         
         // Check event end date
         $eventEndDate = \Carbon\Carbon::parse(config('app.date_end_event', '2025-12-21'))->endOfDay();
+        $uploadDeadline = \Carbon\Carbon::parse('2025-12-26')->endOfDay();
         $isEventEnded = now()->isAfter($eventEndDate);
+        $isUploadDeadlinePassed = now()->isAfter($uploadDeadline);
 
         // Ambil statistik user
         $stats = UserStatistic::firstOrCreate(
@@ -182,6 +184,8 @@ new #[Layout('components.layouts.app.header')]
             'totalDirectorates' => $totalDirectorates,
             'isEventEnded' => $isEventEnded,
             'eventEndDate' => $eventEndDate,
+            'uploadDeadline' => $uploadDeadline,
+            'isUploadDeadlinePassed' => $isUploadDeadlinePassed,
         ];
     }
 };
@@ -201,10 +205,12 @@ new #[Layout('components.layouts.app.header')]
 
             {{-- Alert Event Berakhir --}}
             @if($isEventEnded)
-                <div class="mt-3 rounded-xl bg-red-100 text-red-700 px-4 py-3 flex items-center gap-2">
-                    <flux:icon.exclamation-circle class="w-5 h-5" />
-                    <span>Event telah berakhir pada {{ $eventEndDate->format('d M Y') }}.</span>
-                </div>
+                <flux:modal.trigger name="event-ended-info">
+                    <div class="mt-3 rounded-xl bg-red-100 text-red-700 px-4 py-3 flex items-center gap-2 cursor-pointer hover:bg-red-200 transition">
+                        <flux:icon.exclamation-circle class="w-5 h-5" />
+                        <span>Event telah berakhir pada {{ $eventEndDate->format('d M Y') }}. Klik untuk info lebih lanjut.</span>
+                    </div>
+                </flux:modal.trigger>
             {{-- Alert --}}
             @elseif(!$hasReportedToday)
                 <div class="mt-3 rounded-xl bg-yellow-100 text-yellow-700 px-4 py-3 flex items-center gap-2">
@@ -262,7 +268,7 @@ new #[Layout('components.layouts.app.header')]
                 </div>
 
                 <div class="flex gap-2">
-                    @if(!$isEventEnded)
+                    @if(!$isUploadDeadlinePassed)
                         <flux:modal.trigger name="upload-harian" class="flex-1">
                             <button class="w-full bg-blue-600 text-white py-2 rounded-xl font-semibold hover:bg-blue-700 transition flex items-center justify-center gap-2 whitespace-nowrap">
                                 <i class="ph-fill ph-footprints"></i>
@@ -272,10 +278,10 @@ new #[Layout('components.layouts.app.header')]
                     @else
                         <button disabled class="flex-1 w-full bg-gray-400 text-white py-2 rounded-xl font-semibold cursor-not-allowed flex items-center justify-center gap-2 whitespace-nowrap">
                             <i class="ph-fill ph-lock"></i>
-                            Event Telah Berakhir
+                            Batas Upload Berakhir
                         </button>
                     @endif
-                    @if(!$isEventEnded && $todayReport && $todayReport->status_verifikasi === \App\Enums\StatusVerifikasi::DIVERIFIKASI)
+                    @if(!$isUploadDeadlinePassed && $todayReport && $todayReport->status_verifikasi === \App\Enums\StatusVerifikasi::DIVERIFIKASI)
                     <flux:modal.trigger name="appeal-confirmation" style="min-height:48px">
                         <button
                             class="px-2 bg-gray-100 py-3 rounded-xl text-gray-700 font-semibold text-base hover:bg-gray-200 transition flex items-center justify-center gap-2 whitespace-nowrap"
@@ -505,6 +511,39 @@ new #[Layout('components.layouts.app.header')]
         </div>
     </flux:modal>
 
+    <flux:modal name="event-ended-info" class="min-w-[28rem]">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">Informasi Batas Waktu Event</flux:heading>
+
+                <flux:text class="mt-4">
+                    <div class="space-y-3">
+                        <div class="flex items-start gap-3">
+                            <flux:icon.calendar class="w-5 h-5 text-blue-600 mt-0.5" />
+                            <div>
+                                <p class="font-semibold text-gray-900 dark:text-zinc-100">Batas akhir data langkah kaki yang dapat diverifikasi:</p>
+                                <p class="text-gray-700 dark:text-zinc-300">21 Desember 2025, 23:59</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <flux:icon.cloud-arrow-up class="w-5 h-5 text-green-600 mt-0.5" />
+                            <div>
+                                <p class="font-semibold text-gray-900 dark:text-zinc-100">Batas akhir upload bukti langkah kaki:</p>
+                                <p class="text-gray-700 dark:text-zinc-300">26 Desember 2025, 23:59</p>
+                            </div>
+                        </div>
+                    </div>
+                </flux:text>
+            </div>
+
+            <div class="flex justify-end">
+                <flux:modal.close>
+                    <flux:button variant="primary">Mengerti</flux:button>
+                </flux:modal.close>
+            </div>
+        </div>
+    </flux:modal>
+
     <x-platform-footer />
 
     <script>
@@ -516,6 +555,13 @@ new #[Layout('components.layouts.app.header')]
             Livewire.on('close-modal', (event) => {
                 Flux.modals().close();
             });
+
+            const isEventEnded = {{ $isEventEnded ? 'true' : 'false' }};
+            if (isEventEnded) {
+                setTimeout(() => {
+                    Flux.modal('event-ended-info').show();
+                }, 1000);
+            }
         });
     </script>
 </flux:main>
