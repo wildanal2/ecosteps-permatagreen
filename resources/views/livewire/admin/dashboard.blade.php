@@ -14,15 +14,21 @@ new #[Layout('components.layouts.app')]
     {
         return [
             'totalUsers' => User::where('user_level', 1)->count(),
-            'totalSteps' => DailyReport::sum('langkah'),
-            'totalCO2' => UserStatistic::sum('total_co2e_kg'),
-            // Old calculation based on CO2: UserStatistic::sum('total_co2e_kg') / TreeCo2Absorption::default()->getValue()
-            'totalTrees' => DailyReport::sum('langkah') / 100000, // 100rb langkah = 1 pohon
+            'totalSteps' => User::where('user_level', 1)
+                ->join('user_statistics', 'users.id', '=', 'user_statistics.user_id')
+                ->sum('user_statistics.total_langkah'),
+            'totalCO2' => User::where('user_level', 1)
+                ->join('user_statistics', 'users.id', '=', 'user_statistics.user_id')
+                ->sum('user_statistics.total_co2e_kg'),
+            'totalTrees' => User::where('user_level', 1)
+                ->join('user_statistics', 'users.id', '=', 'user_statistics.user_id')
+                ->sum('user_statistics.total_langkah') / 100000, // 100rb langkah = 1 pohon
             'dailyActivity' => DailyReport::select(
                     DB::raw('DATE(tanggal_laporan) as date'),
                     DB::raw('SUM(langkah) as total_steps'),
                     DB::raw('ROUND(SUM(langkah) * 0.75 / 1000 * ' . EmissionFactor::default()->getValue() . ', 2) as co2e')
                 )
+                ->where('status_verifikasi', StatusVerifikasi::DIVERIFIKASI)
                 ->where('tanggal_laporan', '>=', now()->subDays(7))
                 ->groupBy(DB::raw('DATE(tanggal_laporan)'))
                 ->orderBy('date')
