@@ -108,7 +108,7 @@ new #[Layout('components.layouts.app-with-header')]
                 'total_co2e_kg' => $user->statistics->total_co2e_kg ?? 0,
                 'current_streak' => $user->statistics->current_streak ?? 0,
             ];
-        })->sortByDesc('total_langkah');
+        })->sortByDesc('total_langkah')->values();
 
         $directorateName = $this->selectedDirectorate !== null && $this->selectedDirectorate !== '' 
             ? Directorate::tryFrom($this->selectedDirectorate)?->label() 
